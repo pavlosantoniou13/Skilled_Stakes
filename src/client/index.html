@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Meta Properties -->
+    <meta charset="UTF-8">
+    <title>Open Agar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/main.css" />
+    <!-- Audio -->
+    <audio id="split_cell" src="audio/split.mp3"></audio>
+    <audio id="spawn_cell" src="audio/spawn.mp3"></audio>
+</head>
+<body>
+    <div id="gameAreaWrapper">
+<button id="cashoutBtn" style="position:absolute; right:12px; top:12px; z-index:1000;">Cashout</button>
+<svg id="cashoutLoader" width="40" height="40" style="
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    display:none;
+    z-index:1001;
+">
+    <circle
+        cx="20"
+        cy="20"
+        r="18"
+        stroke="#ccc"
+        stroke-width="4"
+        fill="none"
+    />
+    <circle
+        id="progressCircle"
+        cx="20"
+        cy="20"
+        r="18"
+        stroke="#8e6fff"
+        stroke-width="4"
+        fill="none"
+        stroke-dasharray="113.097" 
+        stroke-dashoffset="113.097"
+        stroke-linecap="round"
+        transform="rotate(-90 20 20)"
+    />
+</svg>
+
+<style>
+@keyframes spin {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+</style>
+        <div id="status"><span class="title">Leaderboard</span></div>
+        <div class="chatbox" id="chatbox">
+            <ul id="chatList" class="chat-list"></ul>
+            <input id="chatInput" type="text" class="chat-input" placeholder="Chat here..." maxlength="35" />
+        </div>
+        <div id="mobile">
+           <input type="image" id="split" class="split" src="img/split.png" alt="splitBtn">
+           <input type="image" id="feed" class="feed" src="img/feed.png" alt="feedBtn">
+        </div>
+        <canvas tabindex="1" id="cvs"></canvas>
+    </div>
+    <div id="startMenuWrapper">
+        <div id="startMenu">
+            <div id="siteName">SkilledStakes.com</div>
+            <button id="depositBtn" onclick="sendDeposit()" disabled>Deposit SOL</button>
+            <button onclick="connectWallet()">Connect Wallet</button>
+            <p id="walletStatus">Wallet: Not connected</p>
+            <p id="balanceStatus">Balance: 0</p>
+            <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="playerNameInput" maxlength="25" />
+            <b class="input-error">Nick must be alphanumeric characters only!</b>
+            <br />
+            <button id="startButton" disabled onclick="document.getElementById('spawn_cell').play();">Play</button>
+            <button id="spectateButton" disabled >Spectate</button>
+            <button id="settingsButton" disabled>Settings</button>
+            <br />
+            <div id="settings">
+                <h3>Settings</h3>
+                <ul>
+                    <label><input id="visBord" type="checkbox">Show border</label>
+                    <label><input id="showMass" type="checkbox">Show mass</label>
+                    <br />
+                    <label><input id="continuity" type="checkbox">Continue moving when mouse is off-screen</label>
+                    <br />
+                    <label><input id="roundFood" type="checkbox" checked>Rounded food</label>
+                    <label><input id="darkMode" type="checkbox">Toggle Dark Mode</label>
+                </ul>
+            </div>
+            <p id="playerCountDisplay">Players online: 0</p>
+            <div id="instructions">
+                <h3 class="info-title"></h3>
+                <div class="gameDescription">
+                <!-- Info Button -->
+<button id="infoBtn">How do i play?</button>
+
+<!-- Info Modal -->
+<div id="infoBox">
+    <div id="infoContent">
+        <span id="closeInfo">&times;</span>
+        <h3 class="info-title">Information</h3>
+        <div class="gameDescription">
+            <ul>
+                <li>Step 1: Connect your Phantom wallet</li>
+                <li>Step 2: Add $1 worth of Solana for your stake</li>
+                <li>Step 3: Eat everyone and make money while doing it!</li>
+                <li>Step 4: Press Q to Cashout!</li>
+            </ul>
+        </div>
+    </div>
+</div>
+            </div>
+            </div>
+            <div id="links">
+        <h3>Where to find us</h3>
+       <div class="link-buttons">
+    <div class="link-box">
+        <a href="https://discord.gg/kbvhGR2T" target="_blank">
+            <img src="images/discord.png" alt="Discord">
+        </a>
+    </div>
+    <div class="link-box">
+        <a href="https://t.me/yourchannel" target="_blank">
+            <img src="images/telegram.png" alt="Telegram">
+        </a>
+    </div>
+    <div class="link-box">
+        <a href="https://twitter.com/yourhandle" target="_blank">
+            <img src="images/twitter.png" alt="Twitter">
+        </a>
+    </div>
+</div>
+        </div>
+    </div>
+    <!-- JS -->
+    <script src="//code.jquery.com/jquery-2.2.0.min.js"></script>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+    <script src="js/app.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+</body>
+</html>
