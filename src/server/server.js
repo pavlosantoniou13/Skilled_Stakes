@@ -19,7 +19,7 @@ const util = require('./lib/util');
 const mapUtils = require('./map/map');
 const {getPosition} = require("./lib/entityUtils");
 // --- ADD THIS BLOCK AT THE TOP ---
-const { Connection, PublicKey, Keypair, SystemProgram, Transaction } = require('@solana/web3.js');
+const { Connection, PublicKey, Keypair, SystemProgram, Transaction, sendAndConfirmRawTransaction } = require('@solana/web3.js');
 
 const GAME_WALLET = process.env.GAME_WALLET;
 
@@ -29,10 +29,22 @@ const GAME_WALLET_SENDER = Keypair.fromSecretKey(
 
 
 // Connect to Devnet (for testing)
-const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
 const playerBalances = {};
 const socketWallets = {};
 const processedTxs = new Set();
+
+const RPC_URL = process.env.CHAINSTACK_RPC;
+const AUTH_HEADER = 'Basic ' + Buffer.from(`${process.env.CHAINSTACK_USER}:${process.env.CHAINSTACK_PASSWORD}`).toString('base64');
+
+const connection = new Connection(RPC_URL, {
+    fetch: (url, options = {}) => fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            Authorization: AUTH_HEADER
+        }
+    }),
+});
 
 
 let map = new mapUtils.Map(config);

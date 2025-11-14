@@ -497,15 +497,18 @@ window.connectWallet = async function () {
 
 window.sendDeposit = async function () {
     const priceUSD = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
-  .then(res => res.json())
-  .then(data => data.solana.usd);
+        .then(res => res.json())
+        .then(data => data.solana.usd);
+        const RPC_URL = 'https://solana-mainnet.core.chainstack.com/4718073a284478dfb0679de53ac6a9c4';
+        const AUTH_HEADER = 'Basic ' + btoa('competent-brown:frisk-plaza-unit-sushi-squall-pants'); 
 
-if (!priceUSD || isNaN(priceUSD)) {
-    alert("Could not fetch SOL price. Try again.");
-    return;
-}
 
-const amountSOL = 1 / priceUSD; // $1 worth of SOL
+    if (!priceUSD || isNaN(priceUSD)) {
+        alert("Could not fetch SOL price. Try again.");
+        return;
+    }
+
+    const amountSOL = 1 / priceUSD; // $1 worth of SOL
 
     if (!window.walletAddress) {
         alert("Connect your wallet first.");
@@ -514,44 +517,61 @@ const amountSOL = 1 / priceUSD; // $1 worth of SOL
 
     const GAME_WALLET = '8ghueP5HWSGWDR7346zyCTnLH3ZuZj4zHrXwXTZfhWRf'; // same as server
 
-
     try {
-        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
-const fromPubkey = window.solana.publicKey;
-const toPubkey = new solanaWeb3.PublicKey(GAME_WALLET);
-const lamports = Math.floor(amountSOL * solanaWeb3.LAMPORTS_PER_SOL);
+        // Custom RPC with auth
+        const connection = new solanaWeb3.Connection(
+            RPC_URL,
+            {
+                commitment: 'confirmed',
+                fetch: (url, options = {}) =>
+                    fetch(url, {
+                        ...options,
+                        headers: {
+                            ...options.headers,
+                            Authorization: AUTH_HEADER
+                        }
+                    })
+            }
+        );
 
-// 1. Create a transfer instruction
-const instruction = solanaWeb3.SystemProgram.transfer({
-  fromPubkey,
-  toPubkey,
-  lamports
-});
+        const fromPubkey = window.solana.publicKey;
+        const toPubkey = new solanaWeb3.PublicKey(GAME_WALLET);
+        const lamports = Math.floor(amountSOL * solanaWeb3.LAMPORTS_PER_SOL);
 
-// 2. Build a transaction
-const transaction = new solanaWeb3.Transaction().add(instruction);
+        // Create transfer instruction
+        const instruction = solanaWeb3.SystemProgram.transfer({
+            fromPubkey,
+            toPubkey,
+            lamports
+        });
 
-// 3. Get a recent blockhash
-transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-transaction.feePayer = fromPubkey;
+        // Build transaction
+        const transaction = new solanaWeb3.Transaction().add(instruction);
 
-// 4. Send the transaction to Phantom
-const signedTx = await window.solana.signTransaction(transaction);
-const txid = await connection.sendRawTransaction(signedTx.serialize());
-await connection.confirmTransaction(txid, 'confirmed');
+        // ✅ Assign fee payer and recent blockhash from your custom connection
+        const { blockhash } = await connection.getLatestBlockhash('confirmed');
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = fromPubkey;
 
-console.log("Deposit tx sent:", txid);
-window.socket.emit('depositRequest', {
-  wallet: window.walletAddress,
-  txSig: txid
-});
+        // Sign with Phantom
+        const signedTx = await window.solana.signTransaction(transaction);
 
+        // Send
+        const txid = await connection.sendRawTransaction(signedTx.serialize());
+        await connection.confirmTransaction(txid, 'confirmed');
+
+        console.log("Deposit tx sent:", txid);
+        window.socket.emit('depositRequest', {
+            wallet: window.walletAddress,
+            txSig: txid
+        });
 
     } catch (err) {
         console.error("Deposit failed:", err);
         alert("Deposit failed: " + err.message);
     }
 };
+
 
 // Called when user clicks the in-game Cashout button
 window.sendCashout = function () {
