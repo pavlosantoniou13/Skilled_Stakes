@@ -512,7 +512,7 @@ const amountSOL = 1 / priceUSD; // $1 worth of SOL
         return;
     }
 
-    const GAME_WALLET = 'DQUW5V4YgGgu8cbvC8sxb62azeJjfydKepXSpSCet1B2'; // same as server
+    const GAME_WALLET = '8ghueP5HWSGWDR7346zyCTnLH3ZuZj4zHrXwXTZfhWRf'; // same as server
 
 
     try {
