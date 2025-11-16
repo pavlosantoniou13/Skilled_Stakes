@@ -668,13 +668,38 @@ window.addEventListener('keyup', (e) => {
 // Listen for confirmation from server
 window.socket.on('cashoutConfirmed', ({ balance, txSig }) => {
     console.log('Cashout confirmed:', txSig);
+
+    // Reset balance
     window.currentDeposit = balance || 0;
+
     const showBalance = document.getElementById('balanceStatus');
-    if (showBalance) showBalance.innerText = `Balance: ${window.currentDeposit}`;
+    if (showBalance) showBalance.innerText = `Balance: $0`;
 
     const btn = document.getElementById('cashoutBtn');
-    if (btn) btn.disabled = (window.currentDeposit <= 0);
-    alert('Cashout sent! Tx: ' + txSig);
+    if (btn) btn.disabled = true;
+
+    // --- SHOW $1 CASH RAIN + TOAST ---
+    const toast = document.getElementById('cashoutSuccess');
+    const amountSpan = document.getElementById('cashoutAmount');
+    const canvas = document.getElementById('cashRainCanvas');
+
+    amountSpan.textContent = '1.00';  // ← your displayBalance
+    toast.classList.add('show');
+    canvas.classList.add('show');
+
+    startCashRain(canvas, 1);  // 1 = $1
+
+    // --- After 5s → back to menu ---
+    setTimeout(() => {
+        toast.classList.remove('show');
+        canvas.classList.remove('show');
+        stopCashRain();
+
+        document.getElementById('gameAreaWrapper').style.opacity = 0;
+        const menu = document.getElementById('startMenuWrapper');
+        menu.style.maxHeight = '1000px';
+        menu.classList.remove('collapsed');
+    }, 5000);
 });
 
 // Optional: server messages (errors, logs)
@@ -691,8 +716,41 @@ window.addEventListener('beforeunload', function (e) {
         e.returnValue = ''; // Chrome requires returnValue to be set
     }
 });
+let rainInterval = null;
 
+function startCashRain(canvas, amount) {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
+    const particleCount = 60 + Math.floor(amount * 40); // more $ = more rain
+
+    const createParticle = () => {
+        const p = document.createElement('div');
+        p.className = 'rain-particle';
+        p.textContent = '$';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.top = '-10px';
+        p.style.fontSize = (1.2 + Math.random() * 0.8) + 'rem';
+        p.style.color = '#4ade80';
+        p.style.animation = `fall ${2 + Math.random() * 2}s linear forwards`;
+        document.body.appendChild(p);
+
+        setTimeout(() => p.remove(), 5000);
+    };
+
+    // Burst
+    for (let i = 0; i < particleCount; i++) {
+        setTimeout(createParticle, i * 30);
+    }
+
+    // Light rain
+    rainInterval = setInterval(createParticle, 200);
+}
+
+function stopCashRain() {
+    if (rainInterval) clearInterval(rainInterval);
+    rainInterval = null;
+}
 
 
 
