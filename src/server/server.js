@@ -483,16 +483,22 @@ const tickGame = () => {
 
     // Transfer balance if exists
     if (playerGotEaten && playerGotEaten.balance) {
-        eaterPlayer.balance = (eaterPlayer.balance || 0) + playerGotEaten.balance;
-        eaterPlayer.displayBalance = (eaterPlayer.displayBalance || 0) + playerGotEaten.displayBalance;
-        
-        playerGotEaten.balance = 0; // reset eaten player balance
-        playerGotEaten.displayBalance = 0;
+    const cellMass = cellGotEaten.mass;
+    const totalMass = playerGotEaten.massTotal;
 
+    if (totalMass > 0) {
+        const balanceToTransfer = (cellMass / totalMass) * playerGotEaten.balance;
+        const displayBalanceToTransfer = (cellMass / totalMass) * playerGotEaten.displayBalance;
 
-        console.log("Player got eaten: ",playerGotEaten)
-        console.log("Player that eat: ",eaterPlayer)
+        eaterPlayer.balance = (eaterPlayer.balance || 0) + balanceToTransfer;
+        eaterPlayer.displayBalance = (eaterPlayer.displayBalance || 0) + displayBalanceToTransfer;
+
+        // Reduce the eaten player's balance by the transferred amount
+        playerGotEaten.balance -= balanceToTransfer;
+        playerGotEaten.displayBalance -= displayBalanceToTransfer;
     }
+}
+
 
     const playerDied = map.players.removeCell(gotEaten.playerIndex, gotEaten.cellIndex);
 
