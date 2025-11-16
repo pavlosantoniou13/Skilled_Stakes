@@ -171,8 +171,12 @@ if (player) {
     map.players.removePlayerByIndex(map.players.data.indexOf(player));
 }
 
-        socket.emit('cashoutConfirmed', { balance: 0, txSig: txid, displayBalance: 0 });
-        console.log(`[CASHOUT] Sent ${amountSOL} SOL to ${wallet}. Tx: ${txid}`);
+    socket.emit('cashoutConfirmed', { 
+        balance: amountSOL,    // ← REAL amount sent
+        txSig: txid 
+    });        
+    
+    console.log(`[CASHOUT] Sent ${amountSOL} SOL to ${wallet}. Tx: ${txid}`);
     } catch (err) {
         console.error('Error during cashout:', err);
         socket.emit('serverMSG', 'Cashout failed: ' + err.message);

@@ -666,30 +666,36 @@ window.addEventListener('keyup', (e) => {
 
 
 // Listen for confirmation from server
-window.socket.on('cashoutConfirmed', ({ balance, txSig }) => {
-    console.log('Cashout confirmed:', txSig);
+window.socket.on('cashoutConfirmed', async ({ balance, txSig }) => {
+    console.log('Cashout confirmed → SOL:', balance, 'Tx:', txSig);
 
-    // Reset balance
-    window.currentDeposit = balance || 0;
+    let usdPrice = 180;
+    try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+        const data = await res.json();
+        usdPrice = data.solana.usd;
+    } catch (e) {}
 
+    const amountUSD = balance * usdPrice;
+
+    // Reset balance safely
+    window.currentDeposit = 0;
     const showBalance = document.getElementById('balanceStatus');
-    if (showBalance) showBalance.innerText = `Balance: $0`;
+    if (showBalance) showBalance.innerText = 'Balance: $0.00';
 
     const btn = document.getElementById('cashoutBtn');
     if (btn) btn.disabled = true;
 
-    // --- SHOW $1 CASH RAIN + TOAST ---
+    // Show toast
     const toast = document.getElementById('cashoutSuccess');
     const amountSpan = document.getElementById('cashoutAmount');
     const canvas = document.getElementById('cashRainCanvas');
 
-    amountSpan.textContent = '1.00';  // ← your displayBalance
+    amountSpan.textContent = amountUSD.toFixed(2);
     toast.classList.add('show');
     canvas.classList.add('show');
+    startCashRain(canvas, amountUSD);
 
-    startCashRain(canvas, 1);  // 1 = $1
-
-    // --- After 5s → back to menu ---
     setTimeout(() => {
         toast.classList.remove('show');
         canvas.classList.remove('show');
