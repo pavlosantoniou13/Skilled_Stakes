@@ -24,7 +24,9 @@ function startGame(type) {
     global.screen.width = window.innerWidth;
     global.screen.height = window.innerHeight;
 
-    document.getElementById('startMenuWrapper').style.maxHeight = '0px';
+    const menuWrapper = document.getElementById('startMenuWrapper');
+menuWrapper.style.maxHeight = '0px';
+menuWrapper.classList.add('collapsed');
     document.getElementById('gameAreaWrapper').style.opacity = 1;
     if (!socket) {
         socket = io({ query: "type=" + type });
@@ -292,8 +294,9 @@ function setupSocket(socket) {
 
     window.setTimeout(() => {
         document.getElementById('gameAreaWrapper').style.opacity = 0;
-        document.getElementById('startMenuWrapper').style.maxHeight = '1000px';
-
+const menuWrapper = document.getElementById('startMenuWrapper');
+menuWrapper.style.maxHeight = '1000px';
+menuWrapper.classList.remove('collapsed');
         if (global.animLoopHandle) {
             window.cancelAnimationFrame(global.animLoopHandle);
             global.animLoopHandle = undefined;
