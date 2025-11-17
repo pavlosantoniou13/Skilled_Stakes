@@ -175,7 +175,6 @@ if (player) {
         balance: amountSOL,    // ← REAL amount sent
         txSig: txid 
     });        
-    
     console.log(`[CASHOUT] Sent ${amountSOL} SOL to ${wallet}. Tx: ${txid}`);
     } catch (err) {
         console.error('Error during cashout:', err);
