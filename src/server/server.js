@@ -197,10 +197,12 @@ if (player) {
 });
 
 
-/* function generateSpawnpoint() {
+ function generateSpawnpoint() {
     let radius = util.massToRadius(config.defaultPlayerMass);
     return getPosition(config.newPlayerInitialPosition === 'farthest', radius, map.players.data)
-} */
+} 
+
+/*
 function generateSpawnpoint() {
     // Test mode: spawn everyone near the center (or random cluster)
     const clusterCenterX = config.gameWidth / 2;
@@ -213,7 +215,7 @@ function generateSpawnpoint() {
 
     return { x, y };
 }
-
+*/
 const addPlayer = (socket) => {
     const currentPlayer = new mapUtils.playerUtils.Player(socket.id);
 
