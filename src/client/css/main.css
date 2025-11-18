@@ -277,3 +277,27 @@ canvas { display: block; width: 100%; height: 100%; }
 @keyframes fall {
   to { transform: translateY(120vh) rotate(360deg); opacity: 0; }
 }
+/* ========================================
+   PERFECT PLAYER NAMES - RED FOR YOU
+   ======================================== */
+
+#status .me {
+  color: #FF4444 !important;  /* BRIGHT RED */
+  font-weight: 800 !important;
+}
+
+#status span:not(.me):not(.title) {
+  color: #5EF2FF !important;  /* CYAN */
+  text-shadow: 0 0 8px #5EF2FF !important;
+}
+
+/* CHAT NAMES */
+.chat-list li b {
+  color: #5EF2FF !important;  /* CYAN */
+  text-shadow: 0 0 4px #5EF2FF !important;
+}
+
+.chat-list li.me b {
+  color: #FF4444 !important;  /* RED */
+  text-shadow: 0 0 6px #FF4444 !important;
+}
