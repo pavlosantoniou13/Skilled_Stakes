@@ -339,27 +339,6 @@ socket.on('updatePlayerCount', (count) => {
     if (balance > 0 && startButton) {
         startButton.disabled = false;
     }
-
-    // Build a proper player object to join
-    if (global.playerName && window.socket && window.socket.connected) {
-        console.log("[CLIENT] Joining game after deposit...");
-
-        const playerData = {
-            name: global.playerName,
-            id: -1,                      // server assigns real ID
-            x: global.screen.width / 2,
-            y: global.screen.height / 2,
-            screenWidth: global.screen.width,
-            screenHeight: global.screen.height,
-            target: { x: global.screen.width / 2, y: global.screen.height / 2 },
-            cells: [], 
-            balance: window.currentDeposit || 0, // track deposited amount
-            displayBalance: 1
-    };
-
-        window.socket.emit('gotit', playerData);
-        global.player = playerData; // update global
-    }
 });
 
 
