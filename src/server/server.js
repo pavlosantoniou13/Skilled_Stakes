@@ -287,12 +287,16 @@ const addPlayer = (socket) => {
     console.log('[INFO] User ' + currentPlayer.name + ' has respawned');
     });
 
-    socket.on('disconnect', () => {
+   socket.on('disconnect', () => {
     const wallet = socketWallets[socket.id];
     if (wallet) {
         console.log(`[INFO] Player with wallet ${wallet} disconnected.`);
         delete socketWallets[socket.id];
     }
+
+    // This line was missing → removes the dead player from the map
+    map.players.removePlayerByID(currentPlayer.id);
+    delete sockets[currentPlayer.id];
 });
 
 
