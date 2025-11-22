@@ -7,6 +7,18 @@ var global = require('./global');
 var playerNameInput = document.getElementById('playerNameInput');
 var socket;
 
+function flashBalance() {
+    const el = document.getElementById('balanceStatus');
+    if (!el) return;
+    
+    // Remove class if already there (resets animation)
+    el.classList.remove('balance-flash');
+    // Trigger reflow so animation restarts
+    void el.offsetWidth;
+    // Add class → animation plays
+    el.classList.add('balance-flash');
+}
+
 var debug = function (args) {
     if (console && console.log) {
         console.log(args);
@@ -329,10 +341,11 @@ socket.on('updatePlayerCount', (count) => {
 
     const walletStatus = document.getElementById('walletStatus');
     //if (walletStatus) walletStatus.innerText = `Balance: ${balance}`;
-    showBalance = document.getElementById('balanceStatus');
-     if (showBalance) {
-        const displayBalance = 1; // always $1
+        const showBalance = document.getElementById('balanceStatus');
+    if (showBalance) {
+        const displayBalance = balance > 0 ? 1 : 0;
         showBalance.innerText = `Balance: $${displayBalance}`;
+        flashBalance(); // FLASH!
     }
 
     const startButton = document.getElementById('startButton');
