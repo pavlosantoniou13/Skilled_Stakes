@@ -316,9 +316,19 @@ menuWrapper.classList.remove('collapsed');
     }, 2500);
 });
 
+window.fakePlayerOffset = 0;
+
+setInterval(() => {
+    // Change fake offset occasionally (-2 to +3)
+    window.fakePlayerOffset = Math.floor(Math.random() * 4) - 2;
+}, Math.floor(Math.random() * 4000) + 4000); // updates every 4–8 second
+
 socket.on('updatePlayerCount', (count) => {
     const display = document.getElementById('playerCountDisplay');
-    if (display) display.innerText = `Players online: ${count}`;
+if (display) {
+    const shown = count + (window.fakePlayerOffset + 9);
+    display.innerText = `Players online: ${shown}`;
+}
 });
 
     socket.on('kick', function (reason) {
