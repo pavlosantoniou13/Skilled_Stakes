@@ -478,6 +478,8 @@ window.connectWallet = async function () {
 };
 
 window.sendDeposit = async function () {
+    if (depositCooldown) return alert("Please wait before depositing again.");
+    startDepositCooldown();
     const priceUSD = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
   .then(res => res.json())
   .then(data => data.solana.usd);
@@ -778,3 +780,21 @@ window.simulateDeposit = function () {
     }
 };
 
+// ---- Deposit Button Cooldown ----
+let depositCooldown = false;
+const DEPOSIT_COOLDOWN_MS = 8000; // 8 seconds cooldown
+
+function startDepositCooldown() {
+    const btn = document.getElementById('depositBtn');
+    if (!btn) return;
+
+    depositCooldown = true;
+    btn.disabled = true;
+    btn.textContent = `Wait...`;
+
+    setTimeout(() => {
+        depositCooldown = false;
+        btn.disabled = false;
+        btn.textContent = "Deposit SOL";
+    }, DEPOSIT_COOLDOWN_MS);
+}
