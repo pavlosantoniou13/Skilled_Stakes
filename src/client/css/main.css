@@ -302,3 +302,87 @@ canvas { display: block; width: 100%; height: 100%; }
   color: #FF4444 !important;  /* RED */
   text-shadow: 0 0 6px #FF4444 !important;
 }
+/* Deposit Button Disabled Visual State */
+#depositBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(40%);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.15) !important;
+  transform: none !important;
+}
+#balanceStatus {
+    transition: all 0.4s ease;
+    font-weight: 800;
+    font-size: 1.85rem !important;        /* big but not insane */
+    letter-spacing: 1.8px;
+    color: #ffffff;
+    
+    /* EXACT same glow style as "Where to find us" */
+    text-shadow: 
+        0 0 8px rgba(255, 255, 255, 0.35),
+        0 0 16px rgba(255, 255, 255, 0.2),
+        0 0 24px rgba(255, 255, 255, 0.1);
+    
+    /* tiny subtle depth */
+    transform: translateY(0);
+}
+
+/* Flash animation stays exactly the same — but now looks insane on big text */
+.balance-flash {
+    animation: balanceFlash 0.9s ease-out forwards;
+    transform: scale(1.2) translateY(-4px);
+    color: #72ff72 !important;
+}
+
+@keyframes balanceFlash {
+    0% {
+        transform: scale(1.15);
+        color: #72ff72;
+        text-shadow: 0 0 20px #72ff72, 0 0 40px #72ff72;
+    }
+    50% {
+        transform: scale(1.25);
+        color: #a8ff9a;
+    }
+    100% {
+        transform: scale(1);
+        color: #fff;
+        text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+}
+/* INFO MODAL — ALWAYS PERFECTLY CENTERED */
+#infoBox {
+  display: none;                     /* hidden by default */
+  position: fixed;
+  inset: 0;                           /* full screen overlay */
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(12px);
+  z-index: 1001;
+  justify-content: center;            /* horizontal center */
+  align-items: center;                /* vertical center */
+  padding: 20px;
+  box-sizing: border-box;
+  padding-left: 10%;    /* current – nice subtle shift right */
+}
+
+#infoContent {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #fff;
+  padding: 35px;
+  border-radius: 20px;
+  max-width: 520px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 0 40px rgba(138,92,255,0.6);
+  border: 1px solid rgba(138,92,255,0.3);
+  animation: modalPop 0.4s ease-out;
+}
+
+/* Smooth pop-in animation */
+@keyframes modalPop {
+  0%   { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}

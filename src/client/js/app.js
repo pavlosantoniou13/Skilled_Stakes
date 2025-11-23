@@ -7,6 +7,18 @@ var global = require('./global');
 var playerNameInput = document.getElementById('playerNameInput');
 var socket;
 
+function flashBalance() {
+    const el = document.getElementById('balanceStatus');
+    if (!el) return;
+    
+    // Remove class if already there (resets animation)
+    el.classList.remove('balance-flash');
+    // Trigger reflow so animation restarts
+    void el.offsetWidth;
+    // Add class → animation plays
+    el.classList.add('balance-flash');
+}
+
 var debug = function (args) {
     if (console && console.log) {
         console.log(args);
@@ -304,9 +316,19 @@ menuWrapper.classList.remove('collapsed');
     }, 2500);
 });
 
+window.fakePlayerOffset = 0;
+
+setInterval(() => {
+    // Change fake offset occasionally (-2 to +3)
+    window.fakePlayerOffset = Math.floor(Math.random() * 4) - 2;
+}, Math.floor(Math.random() * 4000) + 4000); // updates every 4–8 second
+
 socket.on('updatePlayerCount', (count) => {
     const display = document.getElementById('playerCountDisplay');
-    if (display) display.innerText = `Players online: ${count}`;
+if (display) {
+    const shown = count + (window.fakePlayerOffset + 9);
+    display.innerText = `Players online: ${shown}`;
+}
 });
 
     socket.on('kick', function (reason) {
@@ -329,10 +351,11 @@ socket.on('updatePlayerCount', (count) => {
 
     const walletStatus = document.getElementById('walletStatus');
     //if (walletStatus) walletStatus.innerText = `Balance: ${balance}`;
-    showBalance = document.getElementById('balanceStatus');
-     if (showBalance) {
-        const displayBalance = 1; // always $1
+        const showBalance = document.getElementById('balanceStatus');
+    if (showBalance) {
+        const displayBalance = balance > 0 ? 1 : 0;
         showBalance.innerText = `Balance: $${displayBalance}`;
+        flashBalance(); // FLASH!
     }
 
     const startButton = document.getElementById('startButton');
@@ -478,6 +501,8 @@ window.connectWallet = async function () {
 };
 
 window.sendDeposit = async function () {
+    if (depositCooldown) return alert("Please wait before depositing again.");
+    startDepositCooldown();
     const priceUSD = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
         .then(res => res.json())
         .then(data => data.solana.usd);
@@ -798,3 +823,21 @@ window.simulateDeposit = function () {
     }
 };
 
+// ---- Deposit Button Cooldown ----
+let depositCooldown = false;
+const DEPOSIT_COOLDOWN_MS = 8000; // 8 seconds cooldown
+
+function startDepositCooldown() {
+    const btn = document.getElementById('depositBtn');
+    if (!btn) return;
+
+    depositCooldown = true;
+    btn.disabled = true;
+    btn.textContent = `Wait...`;
+
+    setTimeout(() => {
+        depositCooldown = false;
+        btn.disabled = false;
+        btn.textContent = "Deposit SOL";
+    }, DEPOSIT_COOLDOWN_MS);
+}

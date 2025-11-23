@@ -559,7 +559,16 @@ const gameloop = () => {
         map.players.shrinkCells(config.massLossRate, config.defaultPlayerMass, config.minMassLoss);
     }
 
-    map.balanceMass(config.foodMass, config.gameMass, config.maxFood, config.maxVirus);
+    // FOOD EXPLOSION — NO CONFIG NEEDED
+    const targetFoodCount = 3000;        // was probably 500–1000
+    const foodToSpawn = 120;             // spawn 120 per second (was ~10–20)
+
+    if (map.food.data.length < targetFoodCount) {
+        map.food.addNew(foodToSpawn);
+    }
+
+    // Optional: Keep viruses normal (or increase too)
+    // map.viruses.addNew(5); // uncomment if you want more viruses
 };
 
 
