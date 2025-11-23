@@ -547,14 +547,14 @@ const gameloop = () => {
 
     // FOOD EXPLOSION — NO CONFIG NEEDED
     const targetFoodCount = 2000;        // was probably 500–1000
-    const foodToSpawn = 80;             // spawn 120 per second (was ~10–20)
+    const foodToSpawn = 70;             // spawn 120 per second (was ~10–20)
 
     if (map.food.data.length < targetFoodCount) {
         map.food.addNew(foodToSpawn);
     }
 
     // VIRUS SPAWN — THIS LINE WAS MISSING!!!
-    if (map.viruses.data.length < 80) {           // 80 viruses on map (official amount)
+    if (map.viruses.data.length < 60) {           // 80 viruses on map (official amount)
         map.viruses.addNew(2);                    // spawn 3 per second
     }
 
