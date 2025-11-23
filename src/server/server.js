@@ -559,16 +559,19 @@ const gameloop = () => {
         map.players.shrinkCells(config.massLossRate, config.defaultPlayerMass, config.minMassLoss);
     }
 
-    // FOOD EXPLOSION — NO CONFIG NEEDED
-    const targetFoodCount = 3000;        // was probably 500–1000
-    const foodToSpawn = 120;             // spawn 120 per second (was ~10–20)
+    // FOOD EXPLOSION (your cracked style)
+    const targetFoodCount = 1750;
+    const foodToSpawn = 60;
 
     if (map.food.data.length < targetFoodCount) {
         map.food.addNew(foodToSpawn);
     }
 
-    // Optional: Keep viruses normal (or increase too)
-    // map.viruses.addNew(5); // uncomment if you want more viruses
+    // VIRUSES — exactly like original, using your config
+    if (map.viruses.data.length < config.maxVirus) {
+        const toSpawn = Math.min(5, config.maxVirus - map.viruses.data.length);
+        map.viruses.addNew(toSpawn);
+    }
 };
 
 
