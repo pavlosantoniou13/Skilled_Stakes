@@ -107,6 +107,48 @@ const drawCellWithLines = (cell, borders, graph) => {
     graph.fill();
     graph.stroke();
 };
+const drawCashoutIndicator = (cell, graph) => {
+    // Draw the exact same circle loading animation as the UI button
+    // Uses the same proportions and animation as the SVG progressCircle
+    const now = Date.now();
+    const radius = cell.radius + 20;
+    const strokeWidth = 4;
+    const HOLD_TIME = 3000; // 3 seconds
+    
+    // Get the hold start time from the cell data
+    const holdStartTime = cell.holdStartTime;
+    if (!holdStartTime) return; // Safety check
+    
+    // Calculate exact progress just like the UI button does
+    const elapsed = now - holdStartTime;
+    const progress = Math.min(elapsed / HOLD_TIME, 1);
+    
+    // Use the exact same circumference calculation as the UI (113.097 for radius 18)
+    const circumference = 2 * Math.PI * radius;
+    const dashOffset = 113.097 * (1 - progress); // Scale proportionally
+    const scaledOffset = dashOffset * (circumference / 113.097);
+    
+    // Draw background circle (light gray)
+    graph.strokeStyle = '#cccccc';
+    graph.lineWidth = strokeWidth;
+    graph.globalAlpha = 0.3;
+    graph.beginPath();
+    graph.arc(cell.x, cell.y, radius, 0, FULL_ANGLE);
+    graph.stroke();
+    
+    // Draw progress circle (purple with animated dash)
+    graph.globalAlpha = 1;
+    graph.strokeStyle = '#8e6fff';
+    graph.lineWidth = strokeWidth;
+    graph.lineCap = 'round';
+    graph.beginPath();
+    graph.setLineDash([circumference, circumference]);
+    graph.lineDashOffset = -scaledOffset;
+    graph.arc(cell.x, cell.y, radius, 0, FULL_ANGLE);
+    graph.stroke();
+    graph.setLineDash([]); // Reset line dash
+    graph.globalAlpha = 1;
+};
 
 const drawCells = (cells, playerConfig, toggleMassState, borders, graph) => {
     for (let cell of cells) {
@@ -167,6 +209,11 @@ const drawCells = (cells, playerConfig, toggleMassState, borders, graph) => {
                 graph.fill();
                 graph.stroke();
             }
+        }
+
+        // Draw cashout indicator if player is cashing out
+        if (cell.isCashingOut) {
+            drawCashoutIndicator(cell, graph);
         }
 
         // Draw the name and balance

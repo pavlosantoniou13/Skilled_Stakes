@@ -130,7 +130,6 @@ socket.on('cashoutRequest', async ({ wallet }) => {
             return;
         }
 
-
         const amountSOL = playerCashout.balance * 0.9;
         const toPubkey = new PublicKey(wallet);
         const lamports = Math.floor(amountSOL * 1e9); 
@@ -281,6 +280,22 @@ const addPlayer = (socket) => {
     socket.on('windowResized', (data) => {
         currentPlayer.screenWidth = data.screenWidth;
         currentPlayer.screenHeight = data.screenHeight;
+    });
+
+    socket.on('cashoutStarted', (data) => {
+        // Broadcast to all other players that this player started holding Q for cashout
+        io.emit('playerCashoutStarted', {
+            playerId: currentPlayer.id,
+            playerName: currentPlayer.name,
+            holdStartTime: data.holdStartTime
+        });
+    });
+
+    socket.on('cashoutCancelled', () => {
+        // Broadcast to all other players that this player stopped holding Q
+        io.emit('playerCashoutCancelled', {
+            playerId: currentPlayer.id
+        });
     });
 
     
