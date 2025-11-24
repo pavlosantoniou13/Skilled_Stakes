@@ -644,7 +644,10 @@ function triggerCashout() {
 
 function startHold() {
     holdStart = Date.now();
-    loader.style.display = 'block';
+    // Only show loader if not in game (show cell circle instead when playing)
+    if (!global.gameStart) {
+        loader.style.display = 'block';
+    }
     updateProgress();
 }
 
