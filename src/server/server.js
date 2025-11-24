@@ -619,7 +619,7 @@ const updateSpectator = (socketID) => {
 
 
 setInterval(tickGame, 1000 / 60);
-setInterval(gameloop, 1000);
+setInterval(gameloop, 500);
 setInterval(sendUpdates, 1000 / config.networkUpdateFactor);
 
 // Don't touch, IP configurations.
