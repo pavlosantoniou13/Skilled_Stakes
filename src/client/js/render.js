@@ -1,5 +1,27 @@
 const FULL_ANGLE = 2 * Math.PI;
 
+// Image cache to avoid reloading the same image every frame
+const imageCache = {};
+const imageLoadStatus = {};
+
+const getImageFromCache = (src) => {
+    if (!src) return null;
+    if (!imageCache[src]) {
+        const img = new Image();
+        img.onload = function() {
+            imageLoadStatus[src] = 'loaded';
+        };
+        img.onerror = function() {
+            imageLoadStatus[src] = 'error';
+            console.error('[SKIN] Failed to load skin image');
+        };
+        img.src = src;
+        imageCache[src] = img;
+        imageLoadStatus[src] = 'loading';
+    }
+    return imageCache[src];
+};
+
 const drawRoundObject = (position, radius, graph) => {
     graph.beginPath();
     graph.arc(position.x, position.y, radius, 0, FULL_ANGLE);
@@ -88,30 +110,63 @@ const drawCellWithLines = (cell, borders, graph) => {
 
 const drawCells = (cells, playerConfig, toggleMassState, borders, graph) => {
     for (let cell of cells) {
-        graph.fillStyle = cell.color;
-        graph.strokeStyle = cell.borderColor;
-        graph.lineWidth = 6;
-
-        // Draw the cell with wobble if not touching borders
-        if (cellTouchingBorders(cell, borders)) {
-            drawCellWithLines(cell, borders, graph);
-        } else {
-            // Apply wobble even for round cells
-            const time = Date.now() / 200;
-            const points = 30;
-            graph.beginPath();
-            for (let i = 0; i <= points; i++) {
-                let theta = (i / points) * FULL_ANGLE;
-                let wobble = Math.sin(time + i) * (cell.radius * 0.05); // 5% radius
-                let r = cell.radius + wobble;
-                let px = cell.x + r * Math.cos(theta);
-                let py = cell.y + r * Math.sin(theta);
-                if (i === 0) graph.moveTo(px, py);
-                else graph.lineTo(px, py);
+        // If the cell has a custom skin image, draw it; otherwise use the default color
+        if (cell.skinImage) {
+            const img = getImageFromCache(cell.skinImage);
+            const loadStatus = imageLoadStatus[cell.skinImage];
+            
+            if (loadStatus === 'loaded' || (img && img.complete && img.naturalWidth > 0)) {
+                // Image is loaded, draw it
+                graph.save();
+                graph.beginPath();
+                graph.arc(cell.x, cell.y, cell.radius, 0, FULL_ANGLE);
+                graph.clip();
+                graph.drawImage(img, cell.x - cell.radius, cell.y - cell.radius, cell.radius * 2, cell.radius * 2);
+                graph.restore();
+                
+                // Draw border around skin
+                graph.strokeStyle = cell.borderColor;
+                graph.lineWidth = 6;
+                graph.beginPath();
+                graph.arc(cell.x, cell.y, cell.radius, 0, FULL_ANGLE);
+                graph.stroke();
+            } else {
+                // Image not loaded yet, fall back to color
+                graph.fillStyle = cell.color;
+                graph.strokeStyle = cell.borderColor;
+                graph.lineWidth = 6;
+                graph.beginPath();
+                graph.arc(cell.x, cell.y, cell.radius, 0, FULL_ANGLE);
+                graph.fill();
+                graph.stroke();
             }
-            graph.closePath();
-            graph.fill();
-            graph.stroke();
+        } else {
+            // Default drawing behavior
+            graph.fillStyle = cell.color;
+            graph.strokeStyle = cell.borderColor;
+            graph.lineWidth = 6;
+
+            // Draw the cell with wobble if not touching borders
+            if (cellTouchingBorders(cell, borders)) {
+                drawCellWithLines(cell, borders, graph);
+            } else {
+                // Apply wobble even for round cells
+                const time = Date.now() / 200;
+                const points = 30;
+                graph.beginPath();
+                for (let i = 0; i <= points; i++) {
+                    let theta = (i / points) * FULL_ANGLE;
+                    let wobble = Math.sin(time + i) * (cell.radius * 0.05); // 5% radius
+                    let r = cell.radius + wobble;
+                    let px = cell.x + r * Math.cos(theta);
+                    let py = cell.y + r * Math.sin(theta);
+                    if (i === 0) graph.moveTo(px, py);
+                    else graph.lineTo(px, py);
+                }
+                graph.closePath();
+                graph.fill();
+                graph.stroke();
+            }
         }
 
         // Draw the name and balance

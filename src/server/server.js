@@ -255,6 +255,12 @@ const addPlayer = (socket) => {
         currentPlayer.balance = 0; // default
     }
 
+    // Store custom skin if provided
+    if (clientPlayerData.skin) {
+        currentPlayer.skinImage = clientPlayerData.skin;
+        console.log(`[INFO] Custom skin set for player ${clientPlayerData.name}`);
+    }
+
     // Feed client data and add to map
     currentPlayer.clientProvidedData(clientPlayerData);
     map.players.pushNew(currentPlayer);

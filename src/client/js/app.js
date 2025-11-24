@@ -49,7 +49,8 @@ menuWrapper.classList.add('collapsed');
     name: global.playerName, 
     balance: window.currentDeposit || 0,   // include deposit balance
     wallet: window.walletAddress || null,   // optional, if using wallet system
-    displayBalance: 0
+    displayBalance: 0,
+    skin: global.playerSkin || null  // Include custom skin if uploaded
 });
     
     if (!global.animLoopHandle)
@@ -115,6 +116,30 @@ window.onload = function () {
             } else {
                 nickErrorText.style.opacity = 1;
             }
+        }
+    });
+
+    // Skin upload handler
+    const skinInput = document.getElementById('skinInput');
+    const skinPreview = document.getElementById('skinPreview');
+    const previewImage = document.getElementById('previewImage');
+    
+    skinInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imageData = event.target.result;
+                // Store the skin data in global scope
+                global.playerSkin = imageData;
+                
+                // Show preview
+                previewImage.src = imageData;
+                skinPreview.style.display = 'block';
+                
+                console.log('[SKIN] Custom skin uploaded and ready');
+            };
+            reader.readAsDataURL(file);
         }
     });
 };
@@ -267,7 +292,6 @@ function setupSocket(socket) {
 
     // Handle movement.
     socket.on('serverTellPlayerMove', function (playerData, userData, foodsList, massList, virusList) {
-        console.log(userData);
         if (global.playerType == 'player') {
             player.x = playerData.x;
             player.y = playerData.y;
@@ -440,7 +464,8 @@ function gameLoop() {
                     x: users[i].cells[j].x - player.x + global.screen.width / 2,
                     y: users[i].cells[j].y - player.y + global.screen.height / 2,
                     balance: users[i].balance || 0,
-                    displayBalance: users[i].displayBalance || 0
+                    displayBalance: users[i].displayBalance || 0,
+                    skinImage: users[i].skinImage || null
                 });
             }
         }
