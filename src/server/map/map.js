@@ -52,7 +52,8 @@ exports.Map = class {
                     id: player.id,
                     name: player.name,
                     balance: player.balance || 0,
-                    displayBalance: player.displayBalance
+                    displayBalance: player.displayBalance,
+                    skinImage: player.skinImage || null
                 };
             }
 

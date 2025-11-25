@@ -49,7 +49,8 @@ menuWrapper.classList.add('collapsed');
     name: global.playerName, 
     balance: window.currentDeposit || 0,   // include deposit balance
     wallet: window.walletAddress || null,   // optional, if using wallet system
-    displayBalance: 0
+    displayBalance: 0,
+    skin: global.playerSkin || null  // Include custom skin if uploaded
 });
     
     if (!global.animLoopHandle)
@@ -117,6 +118,30 @@ window.onload = function () {
             }
         }
     });
+
+    // Skin upload handler
+    const skinInput = document.getElementById('skinInput');
+    const skinPreview = document.getElementById('skinPreview');
+    const previewImage = document.getElementById('previewImage');
+    
+    skinInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imageData = event.target.result;
+                // Store the skin data in global scope
+                global.playerSkin = imageData;
+                
+                // Show preview
+                previewImage.src = imageData;
+                skinPreview.style.display = 'block';
+                
+                console.log('[SKIN] Custom skin uploaded and ready');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 };
 
 // TODO: Break out into GameControls.
@@ -145,6 +170,7 @@ var fireFood = [];
 var users = [];
 var leaderboard = [];
 var target = { x: player.x, y: player.y };
+var cashingOutPlayers = {}; // Track players cashing out: { playerId: timestamp }
 global.target = target;
 
 window.canvas = new Canvas();
@@ -234,6 +260,16 @@ function setupSocket(socket) {
         window.chat.addSystemLine('{GAME} - <b>' + (isUnnamedCell(data.name) ? 'An unnamed cell' : data.name) + '</b> joined.');
     });
 
+    socket.on('playerCashoutStarted', (data) => {
+        // Mark this player as starting cashout (holding Q) with the exact hold start time
+        cashingOutPlayers[data.playerId] = data.holdStartTime;
+    });
+
+    socket.on('playerCashoutCancelled', (data) => {
+        // Remove the cashout indicator for this player
+        delete cashingOutPlayers[data.playerId];
+    });
+
     socket.on('leaderboard', (data) => {
         leaderboard = data.leaderboard;
         var status = '<span class="title">Leaderboard</span>';
@@ -267,7 +303,6 @@ function setupSocket(socket) {
 
     // Handle movement.
     socket.on('serverTellPlayerMove', function (playerData, userData, foodsList, massList, virusList) {
-        console.log(userData);
         if (global.playerType == 'player') {
             player.x = playerData.x;
             player.y = playerData.y;
@@ -287,6 +322,9 @@ function setupSocket(socket) {
     socket.on('RIP', function () {
     global.gameStart = false;
     render.drawErrorMessage('You died!', graph, global.screen);
+
+    // Clear cashout status
+    cashingOutPlayers = {};
 
     // --- Minimal reset of all player data ---
     window.currentDeposit = 0;
@@ -430,6 +468,8 @@ function gameLoop() {
         for (var i = 0; i < users.length; i++) {
             let color = 'hsl(' + users[i].hue + ', 100%, 50%)';
             let borderColor = 'hsl(' + users[i].hue + ', 100%, 45%)';
+            const isCashingOut = cashingOutPlayers[users[i].id] !== undefined;
+            const holdStartTime = isCashingOut ? cashingOutPlayers[users[i].id] : null;
             for (var j = 0; j < users[i].cells.length; j++) {
                 cellsToDraw.push({
                     color: color,
@@ -440,7 +480,10 @@ function gameLoop() {
                     x: users[i].cells[j].x - player.x + global.screen.width / 2,
                     y: users[i].cells[j].y - player.y + global.screen.height / 2,
                     balance: users[i].balance || 0,
-                    displayBalance: users[i].displayBalance || 0
+                    displayBalance: users[i].displayBalance || 0,
+                    skinImage: users[i].skinImage || null,
+                    isCashingOut: isCashingOut,
+                    holdStartTime: holdStartTime
                 });
             }
         }
@@ -621,7 +664,10 @@ function triggerCashout() {
 
 function startHold() {
     holdStart = Date.now();
-    loader.style.display = 'block';
+    // Only show loader if not in game (show cell circle instead when playing)
+    if (!global.gameStart) {
+        loader.style.display = 'block';
+    }
     updateProgress();
 }
 
@@ -655,6 +701,10 @@ window.addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() === 'q' && !qHeld) {
         qHeld = true;
         startHold();
+        // Notify server that player started holding Q for cashout
+        if (socket) {
+            socket.emit('cashoutStarted', { holdStartTime: holdStart });
+        }
     }
 });
 
@@ -662,6 +712,10 @@ window.addEventListener('keyup', (e) => {
     if (e.key.toLowerCase() === 'q') {
         qHeld = false;
         stopHold();
+        // Notify server that player stopped holding Q
+        if (socket) {
+            socket.emit('cashoutCancelled');
+        }
     }
 });
 
@@ -692,6 +746,14 @@ window.addEventListener('keyup', (e) => {
 // Listen for confirmation from server
 window.socket.on('cashoutConfirmed', async ({ balance, txSig }) => {
     console.log('Cashout confirmed → SOL:', balance, 'Tx:', txSig);
+
+    // Clear the cashout indicator immediately
+    cashingOutPlayers = {};
+    
+    // Also notify server to broadcast the cancellation to other players
+    if (socket) {
+        socket.emit('cashoutCancelled');
+    }
 
     let usdPrice = 180;
     try {

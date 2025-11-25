@@ -142,7 +142,6 @@ socket.on('cashoutRequest', async ({ wallet }) => {
             return;
         }
 
-
         const amountSOL = playerCashout.balance * 0.9;
         const toPubkey = new PublicKey(wallet);
         const lamports = Math.floor(amountSOL * 1e9); 
@@ -269,6 +268,12 @@ const addPlayer = (socket) => {
         currentPlayer.balance = 0; // default
     }
 
+    // Store custom skin if provided
+    if (clientPlayerData.skin) {
+        currentPlayer.skinImage = clientPlayerData.skin;
+        console.log(`[INFO] Custom skin set for player ${clientPlayerData.name}`);
+    }
+
     // Feed client data and add to map
     currentPlayer.clientProvidedData(clientPlayerData);
     map.players.pushNew(currentPlayer);
@@ -289,6 +294,22 @@ const addPlayer = (socket) => {
     socket.on('windowResized', (data) => {
         currentPlayer.screenWidth = data.screenWidth;
         currentPlayer.screenHeight = data.screenHeight;
+    });
+
+    socket.on('cashoutStarted', (data) => {
+        // Broadcast to all other players that this player started holding Q for cashout
+        io.emit('playerCashoutStarted', {
+            playerId: currentPlayer.id,
+            playerName: currentPlayer.name,
+            holdStartTime: data.holdStartTime
+        });
+    });
+
+    socket.on('cashoutCancelled', () => {
+        // Broadcast to all other players that this player stopped holding Q
+        io.emit('playerCashoutCancelled', {
+            playerId: currentPlayer.id
+        });
     });
 
     
@@ -611,7 +632,7 @@ const updateSpectator = (socketID) => {
 
 
 setInterval(tickGame, 1000 / 60);
-setInterval(gameloop, 1000);
+setInterval(gameloop, 500);
 setInterval(sendUpdates, 1000 / config.networkUpdateFactor);
 
 // Don't touch, IP configurations.

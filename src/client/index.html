@@ -74,6 +74,13 @@
             <p id="walletStatus">Wallet: Not connected</p>
             <p id="balanceStatus">Balance: 0</p>
             <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="playerNameInput" maxlength="25" />
+            <div id="skinUploadSection">
+                <label for="skinInput" id="skinLabel">Upload Custom Skin</label>
+                <input type="file" id="skinInput" accept="image/*" />
+                <div id="skinPreview" style="display: none;">
+                    <img id="previewImage" alt="Skin Preview" />
+                </div>
+            </div>
             <b class="input-error">Nick must be alphanumeric characters only!</b>
             <br />
             <button id="startButton" disabled onclick="document.getElementById('spawn_cell').play();">Play</button>
