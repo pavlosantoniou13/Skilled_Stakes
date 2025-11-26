@@ -14,8 +14,31 @@
 <body>
     <div id="gameAreaWrapper">
     <div id="cashoutSuccess">
-        <span id="cashoutAmount"></span> USD
-    </div> 
+    <div class="cashout-card">
+        <div class="cashout-inner">
+            <div class="trophy-icon">🏆</div>
+            <div class="cashout-title">Cashout Confirmed!</div>
+            <div class="cashout-subtitle">Victory Claimed</div>
+            <div class="accent-line"></div>
+            <div class="cashout-amount-display">
+                <span class="cash-symbol">$$$</span>
+                <span class="amount-value" id="cashoutAmount">0.00</span>
+                <span class="currency-label">USD</span>
+            </div>
+            <div class="accent-line"></div>
+            <div class="cashout-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Network</div>
+                    <div class="stat-value">Solana</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value">✓ Confirmed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <canvas id="cashRainCanvas"></canvas>
     <button id="cashoutBtn">Cashout $</button>
 <svg id="cashoutLoader" width="40" height="40" style="
