@@ -36,10 +36,14 @@ function startGame(type) {
     global.screen.width = window.innerWidth;
     global.screen.height = window.innerHeight;
 
-    const menuWrapper = document.getElementById('startMenuWrapper');
-menuWrapper.style.maxHeight = '0px';
-menuWrapper.classList.add('collapsed');
+    const dashboard = document.querySelector('.dashboard');
+    if (dashboard) dashboard.style.display = 'none';
+
+    const topBar = document.querySelector('.top-bar');
+    if (topBar) topBar.style.display = 'none';
+    
     document.getElementById('gameAreaWrapper').style.opacity = 1;
+    document.getElementById('gameAreaWrapper').style.display = 'block';
     if (!socket) {
         socket = io({ query: "type=" + type });
         setupSocket(socket);
@@ -76,47 +80,39 @@ setupSocket(window.socket);
 
 window.onload = function () {
 
-    var btn = document.getElementById('startButton'),
-        btnS = document.getElementById('spectateButton'),
-        nickErrorText = document.querySelector('#startMenu .input-error');
-
-    btnS.onclick = function () {
-        startGame('spectator');
-    };
+    var btn = document.getElementById('startButton');
 
     btn.onclick = function () {
-
         // Checks if the nick is valid.
         if (validNick()) {
-            nickErrorText.style.opacity = 0;
             startGame('player');
         } else {
-            nickErrorText.style.opacity = 1;
+            alert('Nick must be alphanumeric characters only!');
         }
     };
 
     var settingsMenu = document.getElementById('settingsButton');
-    var settings = document.getElementById('settings');
-
-    settingsMenu.onclick = function () {
-        if (settings.style.maxHeight == '300px') {
-            settings.style.maxHeight = '0px';
-        } else {
-            settings.style.maxHeight = '300px';
-        }
-    };
+    if (settingsMenu) {
+        settingsMenu.onclick = function () {
+            alert('Settings coming soon!');
+        };
+    }
 
     playerNameInput.addEventListener('keypress', function (e) {
         var key = e.which || e.keyCode;
 
         if (key === global.KEY_ENTER) {
             if (validNick()) {
-                nickErrorText.style.opacity = 0;
                 startGame('player');
             } else {
-                nickErrorText.style.opacity = 1;
+                alert('Nick must be alphanumeric characters only!');
             }
         }
+    });
+    
+    // Update top bar with player name
+    playerNameInput.addEventListener('input', function() {
+        document.getElementById('topUserName').textContent = this.value || 'Player';
     });
 
     // Skin upload handler
@@ -124,24 +120,29 @@ window.onload = function () {
     const skinPreview = document.getElementById('skinPreview');
     const previewImage = document.getElementById('previewImage');
     
-    skinInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const imageData = event.target.result;
-                // Store the skin data in global scope
-                global.playerSkin = imageData;
-                
-                // Show preview
-                previewImage.src = imageData;
-                skinPreview.style.display = 'block';
-                
-                console.log('[SKIN] Custom skin uploaded and ready');
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+    if (skinInput) {
+        skinInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const imageData = event.target.result;
+                    // Store the skin data in global scope
+                    global.playerSkin = imageData;
+                    
+                    // Show preview
+                    if (previewImage) previewImage.src = imageData;
+                    if (skinPreview) skinPreview.style.display = 'block';
+                    
+                    console.log('[SKIN] Custom skin uploaded and ready');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Initially disable play button
+    btn.disabled = true;
 };
 
 // TODO: Break out into GameControls.
@@ -175,18 +176,6 @@ global.target = target;
 
 window.canvas = new Canvas();
 window.chat = new ChatClient();
-
-var visibleBorderSetting = document.getElementById('visBord');
-visibleBorderSetting.onchange = settings.toggleBorder;
-
-var showMassSetting = document.getElementById('showMass');
-showMassSetting.onchange = settings.toggleMass;
-
-var continuitySetting = document.getElementById('continuity');
-continuitySetting.onchange = settings.toggleContinuity;
-
-var roundFoodSetting = document.getElementById('roundFood');
-roundFoodSetting.onchange = settings.toggleRoundFood;
 
 var c = window.canvas.cv;
 var graph = c.getContext('2d');
@@ -270,28 +259,27 @@ function setupSocket(socket) {
         delete cashingOutPlayers[data.playerId];
     });
 
-    socket.on('leaderboard', (data) => {
-        leaderboard = data.leaderboard;
-        var status = '<span class="title">Leaderboard</span>';
-        if (!users || !Array.isArray(users)) return
-        for (var i = 0; i < leaderboard.length; i++) {
-            status += '<br />';
-            if (leaderboard[i].id == player.id) {
-                if (leaderboard[i].name.length !== 0)
-                    status += '<span class="me">' + (i + 1) + '. ' + leaderboard[i].name + "</span>";
-                else
-                    status += '<span class="me">' + (i + 1) + ". An unnamed cell</span>";
-            } else {
-                if (leaderboard[i].name.length !== 0)
-                    status += (i + 1) + '. ' + leaderboard[i].name;
-                else
-                    status += (i + 1) + '. An unnamed cell';
-            }
+   socket.on('leaderboard', (data) => {
+    leaderboard = data.leaderboard;
+    var status = '<span class="title">Leaderboard</span>';
+    if (!users || !Array.isArray(users)) return
+    for (var i = 0; i < leaderboard.length; i++) {
+        status += '<br />';
+        if (leaderboard[i].id == player.id) {
+            if (leaderboard[i].name.length !== 0)
+                status += '<span class="me">' + (i + 1) + '. ' + leaderboard[i].name + "</span>";
+            else
+                status += '<span class="me">' + (i + 1) + ". An unnamed cell</span>";
+        } else {
+            if (leaderboard[i].name.length !== 0)
+                status += (i + 1) + '. ' + leaderboard[i].name;
+            else
+                status += (i + 1) + '. An unnamed cell';
         }
-        //status += '<br />Players: ' + data.players;
-        document.getElementById('status').innerHTML = status;
-    });
-
+    }
+    //status += '<br />Players: ' + data.players;
+    document.getElementById('status').innerHTML = status;
+});
     socket.on('serverMSG', function (data) {
         window.chat.addSystemLine(data);
     });
@@ -334,19 +322,22 @@ function setupSocket(socket) {
     window.displayBalance = 0;
 
     const showBalance = document.getElementById('balanceStatus');
-    if (showBalance) showBalance.innerText = `Balance: 0`;
+    if (showBalance) showBalance.innerText = `$0.00`;
 
     const walletStatus = document.getElementById('walletStatus');
-    if (walletStatus) walletStatus.innerText = `Wallet: Not connected`;
+    if (walletStatus) walletStatus.innerText = `Not Connected`;
 
     const startButton = document.getElementById('startButton');
     if (startButton) startButton.disabled = true;
 
     window.setTimeout(() => {
         document.getElementById('gameAreaWrapper').style.opacity = 0;
-const menuWrapper = document.getElementById('startMenuWrapper');
-menuWrapper.style.maxHeight = '1000px';
-menuWrapper.classList.remove('collapsed');
+        document.getElementById('gameAreaWrapper').style.display = 'none';
+        const dashboard = document.querySelector('.dashboard');
+        if (dashboard) dashboard.style.display = 'block';
+        const topBar = document.querySelector('.top-bar');
+        if (topBar) topBar.style.display = 'flex';
+        
         if (global.animLoopHandle) {
             window.cancelAnimationFrame(global.animLoopHandle);
             global.animLoopHandle = undefined;
@@ -380,20 +371,17 @@ if (display) {
         }
         socket.close();
     });
-    socket.on('depositConfirmed', ({ balance }) => {
+   socket.on('depositConfirmed', ({ balance }) => {
     console.log(`[CLIENT] Deposit confirmed! Balance: ${balance}`);
     window.hasDeposited = true;
-    window.currentDeposit = balance; // store it globally
+    window.currentDeposit = balance;
     player.displayBalance = window.currentDeposit > 0 ? 1 : 0;
 
-
-    const walletStatus = document.getElementById('walletStatus');
-    //if (walletStatus) walletStatus.innerText = `Balance: ${balance}`;
-        const showBalance = document.getElementById('balanceStatus');
+    const showBalance = document.getElementById('balanceStatus');
     if (showBalance) {
         const displayBalance = balance > 0 ? 1 : 0;
         showBalance.innerText = `Balance: $${displayBalance}`;
-        flashBalance(); // FLASH!
+        flashBalance();
     }
 
     const startButton = document.getElementById('startButton');
@@ -525,13 +513,16 @@ window.connectWallet = async function () {
             console.log("Connected to wallet:", walletAddress);
 
             window.walletAddress = walletAddress;
-            document.getElementById('walletStatus').innerText = `Wallet: ${walletAddress}`;
+            
+            // Update dashboard wallet status
+            const walletStatus = document.getElementById('walletStatus');
+            if (walletStatus) walletStatus.innerText = `Connected`;
 
             if (window.socket) {
                 window.socket.emit('walletConnected', { wallet: walletAddress });
             }
 
-            // Enable deposit button if you disabled it initially
+            // Enable deposit button
             const depositBtn = document.getElementById('depositBtn');
             if (depositBtn) depositBtn.disabled = false;
 
@@ -747,7 +738,7 @@ window.socket.on('cashoutConfirmed', async ({ balance, txSig }) => {
     // Reset balance safely
     window.currentDeposit = 0;
     const showBalance = document.getElementById('balanceStatus');
-    if (showBalance) showBalance.innerText = 'Balance: $0.00';
+    if (showBalance) showBalance.innerText = 'Balance: $0';
 
     const btn = document.getElementById('cashoutBtn');
     if (btn) btn.disabled = true;
@@ -767,10 +758,20 @@ window.socket.on('cashoutConfirmed', async ({ balance, txSig }) => {
         canvas.classList.remove('show');
         stopCashRain();
 
+        // Properly hide game and show dashboard
         document.getElementById('gameAreaWrapper').style.opacity = 0;
-        const menu = document.getElementById('startMenuWrapper');
-        menu.style.maxHeight = '1000px';
-        menu.classList.remove('collapsed');
+        document.getElementById('gameAreaWrapper').style.display = 'none';
+        const dashboard = document.querySelector('.dashboard');
+        if (dashboard) {
+            dashboard.style.display = 'block';
+            dashboard.style.opacity = '1';  // ← MAKE SURE VISIBLE
+        }
+        const topBar = document.querySelector('.top-bar');
+        if (topBar) topBar.style.display = 'flex';
+        
+        // Reset player name input
+        playerNameInput.value = '';
+        document.getElementById('topUserName').textContent = 'Player';
     }, 5000);
 });
 
