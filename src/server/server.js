@@ -252,14 +252,30 @@ const addPlayer = (socket) => {
     // === Player Join (gotit) ===
     socket.on('gotit', (clientPlayerData) => {
     console.log(`[INFO] Player ${clientPlayerData.name} connecting!`);
+    
+    // Validate deposit requirement
+    let playerBalance = 0;
+    if (clientPlayerData.wallet) {
+        socket.wallet = clientPlayerData.wallet; // store wallet on socket
+        if (!playerBalances[socket.wallet]) playerBalances[socket.wallet] = 0;
+        playerBalance = playerBalances[socket.wallet];
+    } else if (clientPlayerData.balance) {
+        playerBalance = clientPlayerData.balance;
+    }
+    
+    // ENFORCE: Only allow join if they have deposited
+    if (playerBalance <= 0) {
+        socket.emit('serverMSG', 'You must deposit before joining the game!');
+        console.log(`[INFO] Player ${clientPlayerData.name} rejected - no deposit`);
+        return;
+    }
+    
     currentPlayer.init(generateSpawnpoint(), config.defaultPlayerMass);
 
     // Apply wallet balance if provided
     if (clientPlayerData.wallet) {
-        socket.wallet = clientPlayerData.wallet; // store wallet on socket
         currentPlayer.walletAddress = clientPlayerData.wallet; // <--- assign it
-        if (!playerBalances[socket.wallet]) playerBalances[socket.wallet] = 0;
-        currentPlayer.balance = playerBalances[socket.wallet];
+        currentPlayer.balance = playerBalance;
         currentPlayer.displayBalance = 1;
         console.log(`[INFO] Applied wallet balance ${currentPlayer.balance} for ${clientPlayerData.name}`);
     } else if (clientPlayerData.balance) {
