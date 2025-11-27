@@ -4,3 +4,4 @@ API key
 Transcations - Wallet flow
 Leaderboard balance
 Speed
+Play button bug

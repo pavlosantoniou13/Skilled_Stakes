@@ -86,11 +86,19 @@ window.onload = function () {
 
     btn.onclick = function () {
 
+        // Check if player has deposited
+        if (!window.hasDeposited || window.currentDeposit <= 0) {
+            nickErrorText.innerText = 'You must deposit before playing!';
+            nickErrorText.style.opacity = 1;
+            return;
+        }
+
         // Checks if the nick is valid.
         if (validNick()) {
             nickErrorText.style.opacity = 0;
             startGame('player');
         } else {
+            nickErrorText.innerText = 'Invalid nickname';
             nickErrorText.style.opacity = 1;
         }
     };
