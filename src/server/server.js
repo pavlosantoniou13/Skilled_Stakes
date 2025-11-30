@@ -563,7 +563,8 @@ const calculateLeaderboard = () => {
     const topPlayers = map.players.getTopPlayers().map(p => ({
         id: p.id,
         name: p.name,      // <- include name
-        massTotal: p.massTotal
+        massTotal: p.massTotal,
+        balance: p.displayBalance || 0  // Include displayBalance for leaderboard
     }));
 
     if (leaderboard.length !== topPlayers.length) {
@@ -613,9 +614,17 @@ const sendUpdates = () => {
 
 const sendLeaderboard = (socket) => {
     if (!socket) return; // safety check
+    // Get fresh displayBalance from actual player data
+    const leaderboardWithBalance = leaderboard.map(entry => {
+        const player = map.players.data.find(p => p.id === entry.id);
+        return {
+            ...entry,
+            balance: player ? player.displayBalance : 0
+        };
+    });
     socket.emit('leaderboard', {
         players: map.players.data.length,
-        leaderboard
+        leaderboard: leaderboardWithBalance
     });
 };
 

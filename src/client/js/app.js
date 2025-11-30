@@ -285,16 +285,13 @@ function setupSocket(socket) {
         if (!users || !Array.isArray(users)) return
         for (var i = 0; i < leaderboard.length; i++) {
             status += '<br />';
+            const playerName = leaderboard[i].name.length !== 0 ? leaderboard[i].name : 'An unnamed cell';
+            const playerBalance = leaderboard[i].balance ? `$${leaderboard[i].balance.toFixed(2)}` : '$0.00';
+            
             if (leaderboard[i].id == player.id) {
-                if (leaderboard[i].name.length !== 0)
-                    status += '<span class="me">' + (i + 1) + '. ' + leaderboard[i].name + "</span>";
-                else
-                    status += '<span class="me">' + (i + 1) + ". An unnamed cell</span>";
+                status += '<span class="me">' + (i + 1) + '. ' + playerName + ' (' + playerBalance + ')</span>';
             } else {
-                if (leaderboard[i].name.length !== 0)
-                    status += (i + 1) + '. ' + leaderboard[i].name;
-                else
-                    status += (i + 1) + '. An unnamed cell';
+                status += '<span class="enemy">' + (i + 1) + '. ' + playerName + ' (' + playerBalance + ')</span>';
             }
         }
         //status += '<br />Players: ' + data.players;
