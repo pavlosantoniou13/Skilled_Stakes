@@ -179,6 +179,7 @@ var users = [];
 var leaderboard = [];
 var target = { x: player.x, y: player.y };
 var cashingOutPlayers = {}; // Track players cashing out: { playerId: timestamp }
+var cameraScale = 1.0; // Agar.io-style camera zoom (1.0 = normal, < 1.0 = zoom out, > 1.0 = zoom in)
 global.target = target;
 
 window.canvas = new Canvas();
@@ -444,34 +445,42 @@ function animloop() {
 
 function gameLoop() {
     if (global.gameStart) {
+        // Clear canvas
         graph.fillStyle = global.backgroundColor;
         graph.fillRect(0, 0, global.screen.width, global.screen.height);
 
-        render.drawGrid(global, player, global.screen, graph);
+        // ===== APPLY CAMERA TRANSFORMATION =====
+        graph.save();
+        graph.translate(global.screen.width / 2, global.screen.height / 2);
+        graph.scale(cameraScale, cameraScale);
+        graph.translate(-player.x, -player.y);
+        // Now drawing in world-space coordinates
+
+        // Draw game world
+        render.drawGrid(global, player, global.screen, graph, cameraScale);
+        
         foods.forEach(food => {
-            let position = getPosition(food, player, global.screen);
-            render.drawFood(position, food, graph);
+            render.drawFood({ x: food.x, y: food.y }, food, graph);
         });
         fireFood.forEach(fireFood => {
-            let position = getPosition(fireFood, player, global.screen);
-            render.drawFireFood(position, fireFood, playerConfig, graph);
+            render.drawFireFood({ x: fireFood.x, y: fireFood.y }, fireFood, playerConfig, graph);
         });
         viruses.forEach(virus => {
-            let position = getPosition(virus, player, global.screen);
-            render.drawVirus(position, virus, graph);
+            render.drawVirus({ x: virus.x, y: virus.y }, virus, graph);
         });
 
-
-        let borders = { // Position of the borders on the screen
-            left: global.screen.width / 2 - player.x,
-            right: global.screen.width / 2 + global.game.width - player.x,
-            top: global.screen.height / 2 - player.y,
-            bottom: global.screen.height / 2 + global.game.height - player.y
+        // Calculate borders in world-space
+        let borders = {
+            left: 0,
+            right: global.game.width,
+            top: 0,
+            bottom: global.game.height
         }
         if (global.borderDraw) {
             render.drawBorder(borders, graph);
         }
 
+        // Draw cells
         var cellsToDraw = [];
         for (var i = 0; i < users.length; i++) {
             let color = 'hsl(' + users[i].hue + ', 100%, 50%)';
@@ -485,8 +494,8 @@ function gameLoop() {
                     mass: users[i].cells[j].mass,
                     name: users[i].name,
                     radius: users[i].cells[j].radius,
-                    x: users[i].cells[j].x - player.x + global.screen.width / 2,
-                    y: users[i].cells[j].y - player.y + global.screen.height / 2,
+                    x: users[i].cells[j].x,
+                    y: users[i].cells[j].y,
                     balance: users[i].balance || 0,
                     displayBalance: users[i].displayBalance || 0,
                     skinImage: users[i].skinImage || null,
@@ -500,11 +509,32 @@ function gameLoop() {
         });
         render.drawCells(cellsToDraw, playerConfig, global.toggleMassState, borders, graph);
 
-        socket.emit('0', window.canvas.target); // playerSendTarget "Heartbeat".
+        // ===== RESTORE CAMERA (back to screen-space for HUD) =====
+        graph.restore();
+
+        socket.emit('0', window.canvas.target, { cameraScale: cameraScale }); // playerSendTarget "Heartbeat" with camera zoom.
     }
 }
 
 window.addEventListener('resize', resize);
+
+// Agar.io-style camera zoom with mousewheel
+window.addEventListener('wheel', (e) => {
+    if (!global.gameStart) return; // Only zoom during gameplay
+    e.preventDefault();
+    
+    const zoomSpeed = 0.08;
+    const minZoom = 0.4;  // Can zoom out to 40%
+    const maxZoom = 2.5;  // Can zoom in to 250%
+    
+    if (e.deltaY < 0) {
+        // Scroll up = zoom in (smaller camera scale = see less, so zoom in)
+        cameraScale = Math.min(cameraScale + zoomSpeed, maxZoom);
+    } else {
+        // Scroll down = zoom out (larger camera scale = see more, so zoom out)
+        cameraScale = Math.max(cameraScale - zoomSpeed, minZoom);
+    }
+}, { passive: false });
 
 function resize() {
     if (!window.socket) {

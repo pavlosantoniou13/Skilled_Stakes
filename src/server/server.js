@@ -411,10 +411,14 @@ const addPlayer = (socket) => {
     });
 
     // Heartbeat function, update everytime.
-    socket.on('0', (target) => {
+    socket.on('0', (target, cameraData = {}) => {
     currentPlayer.lastHeartbeat = new Date().getTime();
         if (target.x !== currentPlayer.x || target.y !== currentPlayer.y) {
             currentPlayer.target = target;
+        }
+        // Store camera scale for visibility culling
+        if (cameraData.cameraScale) {
+            currentPlayer.cameraScale = cameraData.cameraScale;
         }
     });
 

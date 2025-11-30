@@ -238,22 +238,24 @@ const drawCells = (cells, playerConfig, toggleMassState, borders, graph) => {
     }
 };
 
-const drawGrid = (global, player, screen, graph) => {
-    graph.lineWidth = 1;
+const drawGrid = (global, player, screen, graph, cameraScale = 1.0) => {
+    graph.lineWidth = 1 / cameraScale; // Keep grid lines thin regardless of zoom
     graph.strokeStyle = global.lineColor;
     graph.globalAlpha = 0.15;
+    
+    const gridSize = 50; // World units per grid square
+    const startX = Math.floor(0 / gridSize) * gridSize;
+    const startY = Math.floor(0 / gridSize) * gridSize;
+    
     graph.beginPath();
-
-    for (let x = -player.x; x < screen.width; x += screen.height / 18) {
+    for (let x = startX; x <= global.game.width; x += gridSize) {
         graph.moveTo(x, 0);
-        graph.lineTo(x, screen.height);
+        graph.lineTo(x, global.game.height);
     }
-
-    for (let y = -player.y; y < screen.height; y += screen.height / 18) {
+    for (let y = startY; y <= global.game.height; y += gridSize) {
         graph.moveTo(0, y);
-        graph.lineTo(screen.width, y);
+        graph.lineTo(global.game.width, y);
     }
-
     graph.stroke();
     graph.globalAlpha = 1;
 };
