@@ -697,6 +697,24 @@ function stopHold() {
     progressCircle.setAttribute('stroke-dashoffset', '113.097');
 }
 
+window.addEventListener('keydown', (e) => {
+    var LIGHT = '#f2fbff',
+            DARK = '#181818';
+        var LINELIGHT = '#000000',
+            LINEDARK = '#ffffff';
+    if (e.key.toLowerCase() === 'd') {
+        if (global.backgroundColor === LIGHT) {
+        global.backgroundColor = DARK;
+        global.lineColor = LINEDARK;
+        this.addSystemLine('Dark mode enabled.');
+    } else {
+        global.backgroundColor = LIGHT;
+        global.lineColor = LINELIGHT;
+        this.addSystemLine('Dark mode disabled.');
+    }
+    }
+});
+
 // Desktop events
 cashoutBtn.addEventListener('mousedown', startHold);
 cashoutBtn.addEventListener('mouseup', stopHold);
