@@ -354,9 +354,14 @@ setInterval(() => {
 
 socket.on('updatePlayerCount', (count) => {
     const display = document.getElementById('playerCountDisplay');
+    const playersInGame = document.getElementById('statsPlayersInGame');
 if (display) {
-    const shown = count + (window.fakePlayerOffset + 9);
+    const shown = count + (window.fakePlayerOffset + 18);
     display.innerText = `Players online: ${shown}`;
+}
+if (playersInGame) {
+    const view = count + (window.fakePlayerOffset + 96);
+    playersInGame.innerText = `${view}`; 
 }
 });
 
