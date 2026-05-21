@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permit2 Wallet Sender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .button-group button {
+            width: 100%;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .log-container {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #333;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+
+        .log-entry.error {
+            border-left-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .log-entry.success {
+            border-left-color: #28a745;
+            color: #28a745;
+        }
+
+        .signatures-display {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .signature-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            font-size: 12px;
+        }
+
+        .signature-item strong {
+            color: #667eea;
+        }
+
+        .chain-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .chain-btn {
+            padding: 8px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .chain-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .chain-btn:hover {
+            border-color: #667eea;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Permit2 Wallet Sender</h1>
+
+        <!-- Wallet Connection Section -->
+        <div class="section">
+            <h2>Wallet Connection</h2>
+            <div id="walletStatus" class="status info" style="display: none;"></div>
+            <button id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+        </div>
+
+        <!-- Chain Selection -->
+        <div class="section" id="chainSection" style="display: none;">
+            <h2>Select Blockchain</h2>
+            <div class="chain-selector">
+                <button class="chain-btn" data-chain="1" onclick="selectChain(1)">Ethereum</button>
+                <button class="chain-btn" data-chain="137" onclick="selectChain(137)">Polygon</button>
+                <button class="chain-btn" data-chain="43114" onclick="selectChain(43114)">Avalanche</button>
+                <button class="chain-btn" data-chain="56" onclick="selectChain(56)">BSC</button>
+            </div>
+        </div>
+
+        <!-- Token & Permit Configuration -->
+        <div class="section" id="permitSection" style="display: none;">
+            <h2>Configure Permit</h2>
+
+            <div class="form-group">
+                <label for="tokenAddress">Token Address:</label>
+                <input 
+                    type="text" 
+                    id="tokenAddress" 
+                    placeholder="0x..." 
+                    value="0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"
+                >
+                <small style="color: #999; margin-top: 5px; display: block;">Default: UNI on Ethereum</small>
+            </div>
+
+            <div class="form-group">
+                <label for="spenderAddress">Spender Address:</label>
+                <input 
+                    type="text" 
+                    id="spenderAddress" 
+                    placeholder="0x..." 
+                    value="0x000000000022D473030F116dFC393fb8C563d921"
+                >
+                <small style="color: #999; margin-top: 5px; display: block;">Default: Permit2 Contract</small>
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Amount (in Wei):</label>
+                <input 
+                    type="number" 
+                    id="amount" 
+                    placeholder="1000000000000000000" 
+                    value="1000000000000000000"
+                >
+                <small style="color: #999; margin-top: 5px; display: block;">1 token = 10^18 wei</small>
+            </div>
+
+            <div class="form-group">
+                <label for="deadline">Deadline (Unix Timestamp):</label>
+                <input 
+                    type="number" 
+                    id="deadline" 
+                    placeholder="1234567890"
+                >
+                <small style="color: #999; margin-top: 5px; display: block;">Leave empty for 1 hour from now</small>
+            </div>
+
+            <button id="signBtn" onclick="createPermitSignature()">Create Permit Signature</button>
+        </div>
+
+        <!-- Signatures Display -->
+        <div class="section" id="sigSection" style="display: none;">
+            <h2>Collected Signatures</h2>
+            <div id="signaturesDisplay" class="signatures-display"></div>
+            <button id="submitBtn" onclick="submitSignatures()" style="margin-top: 15px;">
+                Submit to Backend
+            </button>
+            <button id="downloadBtn" onclick="downloadSignatures()" style="margin-top: 10px; background: #6c757d;">
+                Download as JSON
+            </button>
+        </div>
+
+        <!-- Logs -->
+        <div class="section">
+            <h2>Debug Logs</h2>
+            <div id="logs" class="log-container"></div>
+            <button id="clearLogsBtn" onclick="clearLogs()" style="margin-top: 10px; background: #6c757d;">
+                Clear Logs
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <script>
+        let walletSender = null;
+        let selectedChain = 1;
+
+        // Chain configurations
+        const chainConfigs = {
+            1: {
+                name: 'Ethereum Mainnet',
+                rpc: 'https://eth.rpc.blxrbdn.com',
+                permitAddress: '0x000000000022D473030F116dFC393fb8C563d921'
+            },
+            137: {
+                name: 'Polygon Mainnet',
+                rpc: 'https://polygon-rpc.com',
+                permitAddress: '0x000000000022D473030F116dFC393fb8C563d921'
+            },
+            43114: {
+                name: 'Avalanche C-Chain',
+                rpc: 'https://api.avax.network/ext/bc/C/rpc',
+                permitAddress: '0x000000000022D473030F116dFC393fb8C563d921'
+            },
+            56: {
+                name: 'BSC Mainnet',
+                rpc: 'https://bsc-dataseed1.binance.org:443',
+                permitAddress: '0x000000000022D473030F116dFC393fb8C563d921'
+            }
+        };
+
+        // Define WalletSender class FIRST (before any functions that use it)
+        class WalletSender {
+            constructor(rpcUrl, permitAddress) {
+                this.web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
+                this.permitAddress = permitAddress;
+                this.userAccount = null;
+                this.chainId = null;
+                this.signatures = {};
+            }
+
+            async connectWallet() {
+                if (!window.ethereum) {
+                    throw new Error('MetaMask or compatible wallet not found');
+                }
+
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts'
+                });
+
+                this.userAccount = accounts[0];
+                const chainIdHex = await window.ethereum.request({
+                    method: 'eth_chainId'
+                });
+                this.chainId = parseInt(chainIdHex, 16);
+
+                return { address: this.userAccount, chainId: this.chainId };
+            }
+
+            async fetchTokenNonce(tokenAddress) {
+                const ERC20_ABI = [
+                    {
+                        constant: true,
+                        inputs: [{ name: '_owner', type: 'address' }],
+                        name: 'nonces',
+                        outputs: [{ name: '', type: 'uint256' }],
+                        type: 'function'
+                    }
+                ];
+
+                const contract = new this.web3.eth.Contract(ERC20_ABI, tokenAddress);
+                const nonce = await contract.methods.nonces(this.userAccount).call();
+                console.log(`Current nonce from token contract: ${nonce}`);
+                return parseInt(nonce);
+            }
+
+            async getTokenInfo(tokenAddress) {
+                const ERC20_ABI = [
+                    {
+                        constant: true,
+                        inputs: [],
+                        name: 'decimals',
+                        outputs: [{ name: '', type: 'uint8' }],
+                        type: 'function'
+                    },
+                    {
+                        constant: true,
+                        inputs: [],
+                        name: 'name',
+                        outputs: [{ name: '', type: 'string' }],
+                        type: 'function'
+                    }
+                ];
+
+                const contract = new this.web3.eth.Contract(ERC20_ABI, tokenAddress);
+                const [decimals, name] = await Promise.all([
+                    contract.methods.decimals().call(),
+                    contract.methods.name().call()
+                ]);
+                return { decimals: parseInt(decimals), name };
+            }
+
+            async createPermitSignature(tokenAddress, spenderAddress, amount, deadline) {
+                const nonce = await this.fetchTokenNonce(tokenAddress);
+                const tokenInfo = await this.getTokenInfo(tokenAddress);
+
+                const domain = {
+                    name: tokenInfo.name,
+                    version: '1',
+                    chainId: this.chainId,
+                    verifyingContract: tokenAddress
+                };
+
+                const types = {
+                    Permit: [
+                        { name: 'owner', type: 'address' },
+                        { name: 'spender', type: 'address' },
+                        { name: 'value', type: 'uint256' },
+                        { name: 'nonce', type: 'uint256' },
+                        { name: 'deadline', type: 'uint256' }
+                    ]
+                };
+
+                const message = {
+                    owner: this.userAccount,
+                    spender: spenderAddress,
+                    value: amount,
+                    nonce: nonce,
+                    deadline: deadline
+                };
+
+                const signature = await this.signTypedData(domain, types, message);
+                const { v, r, s } = this.parseSignature(signature);
+
+                const permitData = {
+                    owner: this.userAccount,
+                    spender: spenderAddress,
+                    value: amount.toString(),
+                    nonce: nonce,
+                    deadline: deadline,
+                    v: v,
+                    r: r,
+                    s: s,
+                    signature: signature,
+                    tokenAddress: tokenAddress,
+                    tokenName: tokenInfo.name,
+                    chainId: this.chainId,
+                    timestamp: new Date().toISOString()
+                };
+
+                this.signatures[tokenAddress] = permitData;
+                return permitData;
+            }
+
+            async signTypedData(domain, types, message) {
+                const msgParams = {
+                    types: {
+                        EIP712Domain: [
+                            { name: 'name', type: 'string' },
+                            { name: 'version', type: 'string' },
+                            { name: 'chainId', type: 'uint256' },
+                            { name: 'verifyingContract', type: 'address' }
+                        ],
+                        ...types
+                    },
+                    primaryType: 'Permit',
+                    domain: domain,
+                    message: message
+                };
+
+                return await window.ethereum.request({
+                    method: 'eth_signTypedData_v4',
+                    params: [this.userAccount, JSON.stringify(msgParams)]
+                });
+            }
+
+            parseSignature(signature) {
+                const r = '0x' + signature.slice(2, 66);
+                const s = '0x' + signature.slice(66, 130);
+                const v = parseInt('0x' + signature.slice(130, 132), 16);
+                return { v, r, s };
+            }
+
+            getSignatures() {
+                return this.signatures;
+            }
+
+            async submitSignatures(backendUrl) {
+                const response = await fetch(`${backendUrl}/api/permits/submit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        permits: this.signatures,
+                        wallet: this.userAccount,
+                        chainId: this.chainId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Backend error: ${response.statusText}`);
+                }
+
+                return await response.json();
+            }
+        }
+
+        function addLog(message, type = 'info') {
+            const logsContainer = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logsContainer.appendChild(entry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        async function connectWallet() {
+            try {
+                addLog('Connecting wallet...', 'info');
+                const config = chainConfigs[selectedChain];
+                walletSender = new WalletSender(config.rpc, config.permitAddress);
+                
+                const result = await walletSender.connectWallet();
+                
+                const status = document.getElementById('walletStatus');
+                status.style.display = 'block';
+                status.className = 'status success';
+                status.innerHTML = `
+                    <strong>✓ Wallet Connected</strong><br>
+                    Address: <code>${result.address}</code><br>
+                    Chain: ${config.name} (ID: ${result.chainId})
+                `;
+                
+                document.getElementById('chainSection').style.display = 'block';
+                document.getElementById('permitSection').style.display = 'block';
+                document.getElementById('sigSection').style.display = 'block';
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('connectBtn').textContent = 'Connected ✓';
+                
+                addLog(`Connected to ${result.address} on ${config.name}`, 'success');
+            } catch (error) {
+                addLog(`Connection failed: ${error.message}`, 'error');
+                const status = document.getElementById('walletStatus');
+                status.style.display = 'block';
+                status.className = 'status error';
+                status.innerHTML = `<strong>✗ Connection Failed</strong><br>${error.message}`;
+            }
+        }
+
+        function selectChain(chainId) {
+            selectedChain = chainId;
+            document.querySelectorAll('.chain-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.chain == chainId) {
+                    btn.classList.add('active');
+                }
+            });
+            addLog(`Selected chain: ${chainConfigs[chainId].name}`, 'info');
+            
+            // Reset wallet connection for new chain
+            document.getElementById('connectBtn').disabled = false;
+            document.getElementById('connectBtn').textContent = 'Connect Wallet';
+            document.getElementById('walletStatus').style.display = 'none';
+            document.getElementById('permitSection').style.display = 'none';
+            document.getElementById('sigSection').style.display = 'none';
+        }
+
+        async function createPermitSignature() {
+            try {
+                if (!walletSender) {
+                    throw new Error('Wallet not connected');
+                }
+
+                const tokenAddress = document.getElementById('tokenAddress').value;
+                const spenderAddress = document.getElementById('spenderAddress').value;
+                const amount = document.getElementById('amount').value;
+                let deadline = document.getElementById('deadline').value;
+
+                if (!deadline) {
+                    // Set deadline to 1 hour from now
+                    deadline = Math.floor(Date.now() / 1000) + 3600;
+                    document.getElementById('deadline').value = deadline;
+                }
+
+                addLog('Creating permit signature...', 'info');
+                addLog(`Token: ${tokenAddress}`, 'info');
+                addLog(`Spender: ${spenderAddress}`, 'info');
+                addLog(`Amount: ${amount}`, 'info');
+                addLog(`Deadline: ${deadline}`, 'info');
+
+                const permitData = await walletSender.createPermitSignature(
+                    tokenAddress,
+                    spenderAddress,
+                    amount,
+                    parseInt(deadline)
+                );
+
+                displaySignatures();
+                addLog('✓ Permit signature created successfully', 'success');
+            } catch (error) {
+                addLog(`Failed to create signature: ${error.message}`, 'error');
+            }
+        }
+
+        function displaySignatures() {
+            const signatures = walletSender.getSignatures();
+            const display = document.getElementById('signaturesDisplay');
+            display.innerHTML = '';
+
+            Object.entries(signatures).forEach(([token, data]) => {
+                const item = document.createElement('div');
+                item.className = 'signature-item';
+                item.innerHTML = `
+                    <strong>${data.tokenName}</strong><br>
+                    <small>
+                        Nonce: ${data.nonce}<br>
+                        Amount: ${data.value}<br>
+                        Deadline: ${data.deadline}<br>
+                        Signature: ${data.signature.slice(0, 20)}...<br>
+                        V: ${data.v} | R: ${data.r.slice(0, 20)}... | S: ${data.s.slice(0, 20)}...
+                    </small>
+                `;
+                display.appendChild(item);
+            });
+        }
+
+        async function submitSignatures() {
+            try {
+                if (!walletSender) {
+                    throw new Error('Wallet not connected');
+                }
+
+                addLog('Submitting signatures to backend...', 'info');
+                await walletSender.submitSignatures('http://localhost:3000');
+                addLog('✓ Signatures submitted successfully', 'success');
+            } catch (error) {
+                addLog(`Failed to submit: ${error.message}`, 'error');
+            }
+        }
+
+        function downloadSignatures() {
+            const signatures = walletSender.getSignatures();
+            const dataStr = JSON.stringify(signatures, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `permits-${Date.now()}.json`;
+            link.click();
+            addLog('✓ Signatures downloaded', 'success');
+        }
+
+        // Set first chain as active
+        document.querySelector('[data-chain="1"]').classList.add('active');
+    </script>
+</body>
+</html>

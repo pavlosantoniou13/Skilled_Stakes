@@ -46,6 +46,25 @@ let leaderboardChanged = false;
 
 const Vector = SAT.Vector;
 
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Permit2 Routes
+const permitRoutes = require('./routes/permit-routes');
+app.use('/api/permits', permitRoutes);
+
+// Serve permit.html as root page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '/../client/permit.html'));
+});
+
+// Also serve at /permit for backward compatibility
+app.get('/permit', (req, res) => {
+    res.sendFile(path.join(__dirname, '/../client/permit.html'));
+});
+
+// Serve other static files
 app.use(express.static(__dirname + '/../client'));
 
 io.on('connection', function (socket) {

@@ -1,0 +1,37 @@
+{
+  "wallet": "0x1234567890123456789012345678901234567890",
+  "chainId": 1,
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "permits": {
+    "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984": {
+      "owner": "0x1234567890123456789012345678901234567890",
+      "spender": "0x000000000022D473030F116dFC393fb8C563d921",
+      "value": "1000000000000000000",
+      "nonce": 0,
+      "deadline": 1705324200,
+      "v": 27,
+      "r": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "s": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "signature": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456781b",
+      "tokenAddress": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+      "tokenName": "Uniswap",
+      "chainId": 1,
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    },
+    "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": {
+      "owner": "0x1234567890123456789012345678901234567890",
+      "spender": "0x000000000022D473030F116dFC393fb8C563d921",
+      "value": "5000000000",
+      "nonce": 1,
+      "deadline": 1705324200,
+      "v": 28,
+      "r": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      "s": "0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321",
+      "signature": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdeffedcba0987654321fedcba0987654321fedcba0987654321fedcba098765431c",
+      "tokenAddress": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenName": "USDC",
+      "chainId": 1,
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  }
+}
