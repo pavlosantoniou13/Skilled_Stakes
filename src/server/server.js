@@ -28,8 +28,10 @@ const GAME_WALLET_SENDER = Keypair.fromSecretKey(
 );
 
 
-// Connect to Devnet (for testing)
-const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+// Connect to Solana Mainnet via Chainstack
+const CHAINSTACK_RPC = process.env.CHAINSTACK_RPC || 'https://api.mainnet-beta.solana.com';
+const connection = new Connection(CHAINSTACK_RPC, 'confirmed');
+console.log('Connected to Solana RPC:', CHAINSTACK_RPC);
 const playerBalances = {};
 const socketWallets = {};
 const processedTxs = new Set();

