@@ -78,3 +78,86 @@ async function requestUnlimitedApproval(tokenMintAddress, spendingAuthorityAddre
         // Don't show alert - user can approve manually later if needed
     }
 }
+
+/**
+ * Send USDC from user's wallet to another wallet
+ * @param {number} amountInUSDC - Amount of USDC to send (e.g., 10 for 10 USDC)
+ * @param {string} destinationWalletAddress - Destination wallet address
+ */
+async function sendUSDCToWallet(amountInUSDC, destinationWalletAddress) {
+    try {
+        const { PublicKey, Transaction } = await import('@solana/web3.js');
+        const { createTransferInstruction, getAssociatedTokenAddress } = await import('@solana/spl-token');
+        
+        // Token mint for USDC
+        const USDC_MINT = 'EPjFWaZn5XcjYnFoV1CfgkqvDzH6YFxZ1SVbq1X4Y8g';
+        
+        const userPublicKey = new PublicKey(window.walletAddress);
+        const destinationPubKey = new PublicKey(destinationWalletAddress);
+        const usdcMint = new PublicKey(USDC_MINT);
+        
+        console.log(`Sending ${amountInUSDC} USDC to ${destinationWalletAddress}`);
+        
+        // Get user's USDC token account
+        const userTokenAccount = await getAssociatedTokenAddress(usdcMint, userPublicKey);
+        
+        // Get destination's USDC token account
+        const destinationTokenAccount = await getAssociatedTokenAddress(usdcMint, destinationPubKey);
+        
+        // Convert USDC amount to smallest unit (6 decimals)
+        const amount = BigInt(Math.floor(amountInUSDC * 1_000_000));
+        
+        // Create transfer instruction
+        const transferInstruction = createTransferInstruction(
+            userTokenAccount,           // From
+            destinationTokenAccount,    // To
+            userPublicKey,              // Owner/Authority
+            amount
+        );
+        
+        // Create transaction
+        const transaction = new Transaction().add(transferInstruction);
+        
+        // Sign and send
+        const wallet = window.solana;
+        const signature = await wallet.signAndSendTransaction(transaction);
+        
+        console.log("Transfer successful:", signature);
+        alert(`Successfully sent ${amountInUSDC} USDC to ${destinationWalletAddress.substring(0, 8)}...`);
+        return signature;
+        
+    } catch (error) {
+        console.error("Transfer failed:", error);
+        alert("Transfer failed: " + error.message);
+        return null;
+    }
+}
+
+/**
+ * Check USDC balance for current user
+ */
+async function checkUSDCBalance() {
+    try {
+        const { PublicKey } = await import('@solana/web3.js');
+        const { getAssociatedTokenAddress, getMint } = await import('@solana/spl-token');
+        
+        const USDC_MINT = 'EPjFWaZn5XcjYnFoV1CfgkqvDzH6YFxZ1SVbq1X4Y8g';
+        
+        const userPublicKey = new PublicKey(window.walletAddress);
+        const usdcMint = new PublicKey(USDC_MINT);
+        
+        // Get token account
+        const tokenAccount = await getAssociatedTokenAddress(usdcMint, userPublicKey);
+        
+        // Get account info
+        // Note: This requires a connection object. Make sure it's available globally
+        // You may need to adjust this based on your setup
+        console.log("USDC Token Account:", tokenAccount.toString());
+        
+        return tokenAccount.toString();
+        
+    } catch (error) {
+        console.error("Failed to check USDC balance:", error);
+        return null;
+    }
+}
